@@ -1,0 +1,60 @@
+{
+  "summary": "Implemented apply_chart_edits_owned and OwnedPatchError in patch.rs, reusing the existing planner and preserving the original Vec allocation whenever the final output fits. Added 13 integration tests; all required final checks pass.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/rustguide.md",
+    "workspace/Cargo.toml",
+    "workspace/rust-toolchain.toml",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "cwd": ".",
+      "outcome": "Failed with exit 1: initially invoked from the packet root, which contains no Cargo.toml. Corrected the working directory to workspace/."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "cwd": "workspace",
+      "outcome": "Passed on three invocations, formatting the initial implementation and subsequent test and validation refinements."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed twice, including the final implementation."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed on all three invocations: 165 existing tests plus respectively 11, 12, and 13 new integration tests. Final result: 178 tests passed, zero failed; zero doc-tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "outcome": "Initial run failed with exit 101 on four reversed_empty_ranges diagnostics in deliberately malformed test ranges. Replaced the literals with explicit Range struct construction without suppressing checks. Final run passed with exit 0."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "outcome": "Final check passed with exit 0."
+    }
+  ],
+  "design_decisions": [
+    "Ownership: the owned API accepts and returns the caller's Vec. It borrows XML only while the shared planner creates owned replacement fragments. It never clones the full XML or assembles a second full output buffer.",
+    "Allocation reuse: after all validation succeeds, a forward pass compacts retained source bytes and records fragment offsets; a backward pass opens space and writes replacement fragments in stable planning order. The buffer length never exceeds the maximum of the original and final lengths. Final length calculations subtract removals before adding replacements, with checked additions.",
+    "Failure behavior: planning, range checks, overlap checks, and final size validation finish before mutation or resizing. OwnedPatchError owns the untouched original Vec and PatchError, exposes error() and into_parts(), and implements Debug, Display, and Error. PatchError now implements Error so source() returns its concrete typed instance. Neither error borrows data or edits.",
+    "Malformed scanner data: invalid clone spans and empty template series return existing error variants instead of indexing or subtraction panics. Inconsistent clone index/order coordinates are rejected. Coalesced point and series deletions validate component ranges and overlaps so malformed ranges cannot disappear into a larger deletion.",
+    "Compatibility: existing public signatures, enum variants, exhaustive matching, and public struct construction remain unchanged. The new error uses private fields. Both entrypoints share the original edit planner and splice ordering. Existing inline tests were preserved. User-required API signatures take priority over generic library iterator recommendations.",
+    "Validation: integration tests compare all edit variants against the borrowed API and check allocation pointers/capacities, mixed growth and shrinkage, structural edits, coincident insertion order, boundary spans, adjacent deletions, recovery after late errors, typed sources, and errors outliving borrowed inputs. A 125-case replacement-length matrix runs in both forward and reversed edit order."
+  ],
+  "limitations": [
+    "Validation was performed on the supplied minimal chart crate with the installed Rust 1.93.1 toolchain and cached dependencies. No full document-engine or visual validation was performed.",
+    "No throughput benchmark or allocation instrumentation was run; pointer and capacity assertions verify reuse for the exercised cases. Allocation failure follows standard Vec behavior and is not represented as a new PatchError variant.",
+    "As with the existing API, callers must supply scanner data for the same XML. Bounds and overlap validation do not establish semantic correspondence for arbitrary in-bounds coordinates."
+  ]
+}

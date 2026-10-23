@@ -70,6 +70,15 @@ context, runs Cargo, and submits a patch for independent compilation, existing
 tests, external consumer tests, and regression-sensitivity checks. Its results
 are recorded separately in the [implementation comparison report](results/rhwp-2026-10-23/REPORT.md).
 
+The [repeated chart suite](integration-hard/README.md) adds two tasks that couple
+ownership, typed error recovery, and public API compatibility in the complete
+`rhwp-ooxml-chart` crate. Three fresh sessions per task and condition produce
+24 archived runs. Its [report](results/rhwp-hard-2026-10-23/REPORT.md) separates
+executable checks from source-review judgments and retains every submitted
+implementation. Recompute its frozen grades with
+`python3 scripts/rhwp_hard_eval.py summarize`; replay the patches with
+`python3 scripts/rhwp_hard_eval.py replay --output .cache/chart-replay --fetch-dependencies`.
+
 Entrypoint UTF-8 bytes and whole-reference file sizes are reproducible packaging
 measurements. They are not token counts or evidence that a model loaded every
 byte. references_read is agent-reported, not a captured tool trace.

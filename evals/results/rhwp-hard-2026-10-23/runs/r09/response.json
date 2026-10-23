@@ -1,0 +1,59 @@
+{
+  "summary": "Added patch::write_chart_edits with support for borrowed and trait-object writers, complete pre-write validation, typed error sources, and direct streaming of unchanged XML slices. Added nine integration tests; all required checks passed.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml"
+  ],
+  "commands": [
+    {
+      "command": "rg --files skill workspace/crates/rhwp-ooxml-chart/tests",
+      "directory": ".",
+      "outcome": "Exit 2 during discovery because the tests directory did not yet exist; skill/SKILL.md was listed. Created the permitted integration-test directory afterward."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all --manifest-path workspace/Cargo.toml",
+      "directory": ".",
+      "outcome": "Passed (exit 0); formatted implementation and integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "directory": "workspace",
+      "outcome": "Passed (exit 0)."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "directory": "workspace",
+      "outcome": "Passed (exit 0): 165 existing unit tests, 9 new integration tests, 0 doc tests; no failures or ignored tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "directory": "workspace",
+      "outcome": "Passed (exit 0)."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "directory": "workspace",
+      "outcome": "Passed (exit 0)."
+    }
+  ],
+  "design_decisions": [
+    "A private ValidatedSplices owns only planned replacement fragments and borrows input XML. It checks every range, sorts with the existing (start, end, sequence) ordering, and checks all overlap before exposing chunks.",
+    "Both public chart-edit APIs use the same plan_chart_edits function and chunk iterator. Existing structural fragment construction uses the same validation type. The streaming path never invokes the full-document Vec-producing API or clones the whole XML.",
+    "The new W: std::io::Write + ?Sized bound accepts both concrete writers and &mut dyn Write while retaining caller ownership. write_all handles short writes, Interrupted and WriteZero; no flush or close occurs.",
+    "WritePatchError owns the original PatchError or io::Error. Manual Display and Error implementations require no new dependency. An additive Error implementation for PatchError enables typed Error::source downcasts. Custom I/O payload identity is tested.",
+    "Validation failures precede every writer call, including late invalid and overlapping spans. I/O failures stop immediately and may leave a prefix; documentation explicitly disclaims rollback.",
+    "Existing public signatures, enum variants, exhaustive matching and struct-literal construction remain unchanged. Only the new error enum is non_exhaustive. Existing inline tests and configuration were preserved.",
+    "Integration coverage includes every ChartEdit variant, value and label replacement, identity and empty edits, same-anchor series appends, mixed point/series growth, short and interrupted writes, trait objects, byte preservation, validation atomicity, WriteZero, and custom I/O failures at multiple output positions."
+  ],
+  "limitations": [
+    "This is a component-level implementation and test run in the supplied minimal workspace; no full document engine, renderer visual comparison, upstream integration, or performance/allocation benchmark was performed.",
+    "As in the existing APIs, ChartData must come from scanning the same XML bytes. The new output phase validates all planned splice ranges; it does not introduce a complete independent validator for arbitrarily forged ChartData.",
+    "Planner replacement and structural clone fragments still allocate as permitted. Streaming removes the extra full-result buffer but is not allocation-free.",
+    "The supplied Rust 1.93.1 toolchain and cached dependencies were used. No toolchain, dependency, manifest, or lint-configuration changes were made."
+  ]
+}

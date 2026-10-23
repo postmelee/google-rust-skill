@@ -1,0 +1,32 @@
+{
+  "reviewer": "Primary agent, non-blinded source review",
+  "criteria": [
+    {
+      "criterion": "The owned path reuses the existing planner without cloning the whole input or constructing a second full output buffer; existing planned fragments are allowed.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "xml.copy_within(read..p.span.start, write);",
+      "rationale": "The owned path first compacts retained source bytes and then expands backward using planned fragments. It reuses plan_chart_edits and does not clone the full XML or collect a second full output."
+    },
+    {
+      "criterion": "The original vector is owned by the returned error, with validation completed before mutation and no borrowed lifetime required for recovery.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "Err(error) => Err(OwnedPatchError { xml, error }),",
+      "rationale": "The error moves the original vector and owned PatchError. Planning and validation precede mutation, and the error has no borrowed lifetime."
+    },
+    {
+      "criterion": "Existing APIs, enum variants and struct construction remain compatible; no new unsafe code or suppressed checks are used.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "impl std::error::Error for PatchError {}",
+      "rationale": "The existing error gains an additive standard Error implementation. Existing variants, public struct construction and function signatures remain intact; external legacy consumers compile and match frozen outputs."
+    }
+  ],
+  "scope_pass": true,
+  "scope_rationale": "Only patch.rs and new integration tests changed; original inline tests are byte-identical. Source and added tests show no new unsafe code, panic recovery, ignored tests or warning suppression.",
+  "sensitivity_expected": true,
+  "sensitivity_quote": "error[E0432]: unresolved import `rhwp_ooxml_chart::patch::OwnedPatchError`",
+  "sensitivity_rationale": "Pristine source does not export the requested API/error. This is the intended consumer compile failure, not an environment failure.",
+  "observations": "Two-pass in-place movement preserves allocation under opposing growth/shrink operations. Structural-coordinate guards were added within the permitted source file. Incidental accessor attributes are not scored."
+}

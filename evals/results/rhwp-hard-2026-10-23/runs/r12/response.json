@@ -1,0 +1,75 @@
+{
+  "summary": "Implemented write_chart_edits<W: Write + ?Sized> with complete preflight validation, direct borrowed-slice streaming, typed WritePatchError causes, and seven integration tests. All final required checks passed.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "attempt": 1,
+      "outcome": "Passed; formatted the implementation and integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "attempt": 1,
+      "outcome": "Passed."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "attempt": 1,
+      "outcome": "Passed: 165 existing unit tests and 7 new integration tests; 0 doc tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "attempt": 1,
+      "outcome": "Failed: reversed_empty_ranges rejected the intentionally malformed 20..10 span in an integration test. Replaced the literal with an explicit Range struct without suppressing the lint."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "attempt": 1,
+      "outcome": "Passed."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "attempt": 2,
+      "outcome": "Passed; formatted the implementation and integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "attempt": 2,
+      "outcome": "Passed."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "attempt": 2,
+      "outcome": "Passed: 165 existing unit tests and 7 new integration tests; 0 doc tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "attempt": 2,
+      "outcome": "Passed with warnings denied."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "attempt": 2,
+      "outcome": "Passed."
+    }
+  ],
+  "design_decisions": [
+    "Both public edit paths reuse plan_chart_edits and the existing Planner. SplicePlan owns replacement fragments and borrows the original XML, validates all bounds before sorting, and validates all overlaps before exposing output chunks.",
+    "The buffered API and structural-fragment helper collect the same validated chunks. The writer API calls write_all directly on those chunks and never builds a whole-document buffer.",
+    "The writer stays borrowed and is never flushed or closed. write_all preserves standard short-write, Interrupted, and WriteZero behavior. Any I/O failure ends output immediately, with the original io::Error and custom payload preserved.",
+    "WritePatchError implements Debug, Display, and Error; source exposes the original PatchError or io::Error. PatchError gains an additive Error implementation without changes to existing variants, signatures, or public struct fields.",
+    "Malformed clone-template bounds now return the existing StructureSpanOutOfRange variant instead of indexing out of bounds; an empty template list returns SeriesNotClonable.",
+    "Integration coverage includes every ChartEdit variant, mixed edits, multiple insertions at one anchor, trait-object writers, short writes, interruption retry, untouched writers on late validation failures, typed custom I/O payload identity, exact partial prefixes, WriteZero, and direct borrowing for no-edit output."
+  ],
+  "limitations": [
+    "Validation errors leave the writer untouched; I/O errors can leave an output prefix and provide no rollback guarantee.",
+    "This is isolated component validation, not an upstream contribution, full document-engine run, visual validation, or memory benchmark.",
+    "As with the existing API, callers must supply ChartData scanned from the same XML. Replacement and structural fragments remain allocated by the planner."
+  ]
+}

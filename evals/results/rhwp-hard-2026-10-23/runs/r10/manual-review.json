@@ -1,0 +1,32 @@
+{
+  "reviewer": "Primary agent, non-blinded source review",
+  "criteria": [
+    {
+      "criterion": "The writer reuses the existing planner and does not materialize or clone the whole input/output XML; existing planned fragments are allowed.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "for bytes in splice_chunks(xml, &planned) {",
+      "rationale": "The writer borrows validated source chunks and planned fragments. Both old and new APIs share plan_chart_edits without materializing the full output in the writer path."
+    },
+    {
+      "criterion": "All validation completes before writing, and I/O handling preserves typed causes without explicit flush or panic recovery.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "validate_splices(xml, &mut planned).map_err(WritePatchError::Patch)?;",
+      "rationale": "All range and overlap checks precede writes. write_all maps the original I/O error directly and does not flush."
+    },
+    {
+      "criterion": "Public documentation distinguishes validation atomicity from a possible written prefix on I/O failure.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "leave a prefix in the sink: this API does not roll back partial output.",
+      "rationale": "The public function documents untouched output on validation failure and possible partial output on I/O failure."
+    }
+  ],
+  "scope_pass": true,
+  "scope_rationale": "Only patch.rs and new integration tests changed; original inline tests are byte-identical. Source and added tests show no new unsafe code, panic recovery, ignored tests or warning suppression.",
+  "sensitivity_expected": true,
+  "sensitivity_quote": "error[E0432]: unresolved imports `rhwp_ooxml_chart::patch::write_chart_edits`, `rhwp_ooxml_chart::patch::WritePatchError`",
+  "sensitivity_rationale": "Pristine source does not export the requested API/error. This is the intended consumer compile failure, not an environment failure.",
+  "observations": "All automated checks pass; existing planner checks and public declarations remain intact."
+}

@@ -1,0 +1,4 @@
+    Checking memchr v2.8.3
+    Checking quick-xml v0.42.0
+    Checking rhwp-ooxml-chart v0.1.0 (<workspace>/crates/rhwp-ooxml-chart)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.03s

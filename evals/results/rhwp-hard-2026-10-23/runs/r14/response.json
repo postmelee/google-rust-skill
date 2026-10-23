@@ -1,0 +1,46 @@
+{
+  "summary": "Added apply_chart_edits_owned and OwnedPatchError. The owned path shares the existing planner, validates before mutation, preserves the original vector on validation errors, and reuses its allocation whenever the final output fits. Added seven integration tests; all final required checks passed.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "outcome": "Passed on all four invocations while preparing implementation and tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Passed on initial and final runs."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Initial run passed 165 existing unit tests and 5 integration tests. Final run passed 165 existing unit tests and 7 integration tests; zero failures, zero ignored tests, zero doc tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "outcome": "Initial run failed with reversed_empty_ranges on the intentionally malformed 9..2 test range. Replaced the literal with an explicit Range struct without suppressing the lint. Final run passed."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "outcome": "Passed on initial and final runs."
+    }
+  ],
+  "design_decisions": [
+    "The new error owns Vec<u8> and PatchError with no borrowed lifetimes. It implements Debug, Display and Error, exposes the typed PatchError through source(), and provides error() and into_parts(). PatchError gained an additive Error implementation; its variants and existing public data types/signatures remain unchanged.",
+    "Both entrypoints share plan_chart_edits and splice validation. Range validation precedes sorted overlap validation, preserving existing rejection ordering. Final output size is checked before mutation with existing range-error variants.",
+    "The owned executor first compacts untouched bytes in the original vector, truncates to that compacted length, resizes to the final length, and places fragments and retained gaps backward. This requires no full input clone or second full output buffer and avoids temporary growth beyond the final length. Existing planned structural fragments remain owned.",
+    "Empty edits immediately return the original vector. Validation errors occur before any input mutation or capacity change. Tests verify bytes, pointer and capacity recovery and that errors survive dropped data and edits.",
+    "Hardened planner operations that consume public scanner coordinates: checked template slicing and empty-series handling; validated consumed structural ranges; replaced template range-length debug assertions with typed errors; rejected overlapping template index/order ranges.",
+    "Integration tests compare owned output against borrowed output for all ChartEdit variants, exact/spare capacity, growth, shrinkage, Unicode labels, same-anchor series inserts/appends, adjacent spans, malformed coordinates, and late validation errors."
+  ],
+  "limitations": [
+    "Validation covers this isolated chart component, not a full document engine or visual rendering workflow.",
+    "Allocation failure follows standard Vec behavior; allocation failure recovery is not introduced.",
+    "No benchmark or allocator instrumentation was run. Allocation reuse is checked through vector pointer and capacity assertions and the implementation avoids full-document duplicate buffers.",
+    "No skill/SKILL.md was present in this packet. No external repositories, other packets, prior results, or web sources were read."
+  ]
+}

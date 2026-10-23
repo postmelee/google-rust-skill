@@ -1,0 +1,32 @@
+{
+  "reviewer": "Primary agent, non-blinded source review",
+  "criteria": [
+    {
+      "criterion": "The owned path reuses the existing planner without cloning the whole input or constructing a second full output buffer; existing planned fragments are allowed.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "xml.copy_within(read..p.span.start, write);",
+      "rationale": "The owned implementation compacts retained bytes then expands backward using planned fragments, with no second full XML copy."
+    },
+    {
+      "criterion": "The original vector is owned by the returned error, with validation completed before mutation and no borrowed lifetime required for recovery.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "Err(error) => Err(OwnedPatchError { xml, error }),",
+      "rationale": "Planning and bounds/overlap validation precede mutation. The error owns the original vector and typed cause without borrowing the edit inputs."
+    },
+    {
+      "criterion": "Existing APIs, enum variants and struct construction remain compatible; no new unsafe code or suppressed checks are used.",
+      "pass": false,
+      "file": "patch.diff",
+      "quote": "-        debug_assert_eq!(forder.end - forder.start, order_span.end - order_span.start);",
+      "rationale": "The patch deletes both existing template numbering-span width assertions without an equivalent width/coordinate consistency rejection. New bounds checks only establish that each range is inside the XML. This disables existing checks, contrary to the frozen task constraint; safe refactoring could retain them or replace them with typed rejection."
+    }
+  ],
+  "scope_pass": false,
+  "scope_rationale": "Permitted files and original tests are intact, but two existing consistency checks were removed without an equivalent predicate. This violates TASK.md: Do not disable tests or checks.",
+  "sensitivity_expected": true,
+  "sensitivity_quote": "error[E0432]: unresolved imports `rhwp_ooxml_chart::patch::apply_chart_edits_owned`, `rhwp_ooxml_chart::patch::OwnedPatchError`",
+  "sensitivity_rationale": "Pristine source does not export the requested API/error. This is the intended consumer compile failure, not an environment failure.",
+  "observations": "All executable gates pass. The final failure is a non-blinded source-review judgment under the pre-frozen no-suppressed-checks requirement, not an external-test failure. The response acknowledges removing the debug-only span-length assumptions; the patch was not repaired."
+}

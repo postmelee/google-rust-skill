@@ -1,0 +1,32 @@
+{
+  "reviewer": "Primary agent, non-blinded source review",
+  "criteria": [
+    {
+      "criterion": "The owned path reuses the existing planner without cloning the whole input or constructing a second full output buffer; existing planned fragments are allowed.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "xml.copy_within(read..p.span.start, write);",
+      "rationale": "Shared planned fragments are applied by forward compaction and backward expansion of the original vector, without another full input/output buffer."
+    },
+    {
+      "criterion": "The original vector is owned by the returned error, with validation completed before mutation and no borrowed lifetime required for recovery.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "Err(error) => Err(OwnedPatchError { xml, error }),",
+      "rationale": "Planning and splice validation finish before mutation. The error owns the untouched vector and typed cause without borrowing scanner data or edits."
+    },
+    {
+      "criterion": "Existing APIs, enum variants and struct construction remain compatible; no new unsafe code or suppressed checks are used.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "if fidx.end - fidx.start != idx_span.end - idx_span.start",
+      "rationale": "Legacy public declarations remain compatible. Original width assertions are replaced with equivalent typed rejection; no new unsafe or suppressed checks were found."
+    }
+  ],
+  "scope_pass": true,
+  "scope_rationale": "Only patch.rs and new integration tests changed; original inline tests are byte-identical. Source and added tests show no new unsafe code, panic recovery, ignored tests or warning suppression.",
+  "sensitivity_expected": true,
+  "sensitivity_quote": "error[E0432]: unresolved import `rhwp_ooxml_chart::patch::OwnedPatchError`",
+  "sensitivity_rationale": "Pristine source does not export the requested API/error. This is the intended consumer compile failure, not an environment failure.",
+  "observations": "All automated checks pass, including 165 unchanged original tests and 13 added tests. No extra credit is assigned for test count."
+}

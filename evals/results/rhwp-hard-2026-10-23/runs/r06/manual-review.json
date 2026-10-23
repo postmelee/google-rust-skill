@@ -1,0 +1,32 @@
+{
+  "reviewer": "Primary agent, non-blinded source review",
+  "criteria": [
+    {
+      "criterion": "The writer reuses the existing planner and does not materialize or clone the whole input/output XML; existing planned fragments are allowed.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "let mut planned = plan_chart_edits(xml, data, edits).map_err(WritePatchError::Patch)?;",
+      "rationale": "The new writer reuses the planner and emits borrowed unchanged slices and owned planned fragments; it does not call the legacy full-output collector."
+    },
+    {
+      "criterion": "All validation completes before writing, and I/O handling preserves typed causes without explicit flush or panic recovery.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "validate_splices(xml, &mut planned).map_err(WritePatchError::Patch)?;",
+      "rationale": "Bounds and overlaps are checked before writing. write_all errors are wrapped directly; Error::source returns the original typed causes. No flush or panic recovery is introduced."
+    },
+    {
+      "criterion": "Public documentation distinguishes validation atomicity from a possible written prefix on I/O failure.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "it untouched. An I/O error can leave a prefix of the result; writing stops",
+      "rationale": "The public API documentation distinguishes untouched validation failure from a possible partial I/O write."
+    }
+  ],
+  "scope_pass": true,
+  "scope_rationale": "Only patch.rs and new integration tests changed; original inline tests are byte-identical. Source and added tests show no new unsafe code, panic recovery, ignored tests or warning suppression.",
+  "sensitivity_expected": true,
+  "sensitivity_quote": "error[E0432]: unresolved import `rhwp_ooxml_chart::patch::WritePatchError`",
+  "sensitivity_rationale": "Pristine source does not export the requested API/error. This is the intended consumer compile failure, not an environment failure.",
+  "observations": "The new error enum is non_exhaustive; existing enums are unchanged. This additive design choice is not a separate scored criterion."
+}

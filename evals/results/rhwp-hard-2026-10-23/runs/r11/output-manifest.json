@@ -1,0 +1,46 @@
+{
+  "Cargo.lock": {
+    "sha256": "eb8ff075306f17ac4c1c97f4301718287d9f4542fcc1c6dd96866f5a03bf0a3d",
+    "bytes": 589
+  },
+  "Cargo.toml": {
+    "sha256": "163eb09d520766868be8bd7bdc72784640ddb94c739dca9209cdd93f8adc3551",
+    "bytes": 65
+  },
+  "LICENSE": {
+    "sha256": "1c3a7d5643b163a3ead4965e1bea33b832caee5bfca265efe42afcd7bc696b5b",
+    "bytes": 1072
+  },
+  "crates/rhwp-ooxml-chart/Cargo.toml": {
+    "sha256": "3ef59a0b72a54ef4f9ec45154f0c52da8faf80e30a79c2ea4c6562b03a61bbc3",
+    "bytes": 183
+  },
+  "crates/rhwp-ooxml-chart/src/data.rs": {
+    "sha256": "83141fa574a604bad4c9945e3bb2aa8e42ae8e6b49704490cc03b219da62a3df",
+    "bytes": 54716
+  },
+  "crates/rhwp-ooxml-chart/src/lib.rs": {
+    "sha256": "2880ec7f3d4358c1ea16cc5e0d93318dea6663ce2f95aa909a5690017268310a",
+    "bytes": 19552
+  },
+  "crates/rhwp-ooxml-chart/src/parser.rs": {
+    "sha256": "740b43f077862fbb321a8853468c1dc6a6f677d1eee940423be4c8941d0e19aa",
+    "bytes": 71838
+  },
+  "crates/rhwp-ooxml-chart/src/patch.rs": {
+    "sha256": "60b82e6a2870a6b32563aecb80e6176fe85de50c6725e1d16eb1fa0b8c125204",
+    "bytes": 52671
+  },
+  "crates/rhwp-ooxml-chart/src/renderer.rs": {
+    "sha256": "ccbd0ead88e987a941ab1a6f3222065a7dc3edf11ee48310979593c5ff2c9fdd",
+    "bytes": 214076
+  },
+  "crates/rhwp-ooxml-chart/tests/write_chart_edits.rs": {
+    "sha256": "d6bae641277465be5b87569d8804dd85dd41bf5ffc483c44399b99daddb9c12d",
+    "bytes": 12655
+  },
+  "rust-toolchain.toml": {
+    "sha256": "a4e0fa252c4ca8f5dcc75288ac7c4ead972ce5755d7aa3a9c895eabc922bc24f",
+    "bytes": 123
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "reviewer": "Primary agent, non-blinded source review",
+  "criteria": [
+    {
+      "criterion": "The owned path reuses the existing planner without cloning the whole input or constructing a second full output buffer; existing planned fragments are allowed.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "xml.copy_within(read..p.span.start, write);",
+      "rationale": "The shared planner yields fragment splices; retained input is compacted in the original vector and expanded backward without a second full-output buffer."
+    },
+    {
+      "criterion": "The original vector is owned by the returned error, with validation completed before mutation and no borrowed lifetime required for recovery.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "Err(error) => Err(OwnedPatchError { xml, error }),",
+      "rationale": "Validation returns before mutation; the error owns the original vector and exposes the typed cause and recovery API."
+    },
+    {
+      "criterion": "Existing APIs, enum variants and struct construction remain compatible; no new unsafe code or suppressed checks are used.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "if fidx.end - fidx.start != idx_span.end - idx_span.start",
+      "rationale": "Legacy public types remain intact. Former debug checks are replaced with explicit fallible width validation, preserving their consistency predicate."
+    }
+  ],
+  "scope_pass": true,
+  "scope_rationale": "Only patch.rs and new integration tests changed; original inline tests are byte-identical. Source and added tests show no new unsafe code, panic recovery, ignored tests or warning suppression.",
+  "sensitivity_expected": true,
+  "sensitivity_quote": "error[E0432]: unresolved import `rhwp_ooxml_chart::patch::OwnedPatchError`",
+  "sensitivity_rationale": "Pristine source does not export the requested API/error. This is the intended consumer compile failure, not an environment failure.",
+  "observations": "All automated checks pass. Existing width checks are preserved as typed error checks; original allocation and mixed-size edits pass the external oracle."
+}

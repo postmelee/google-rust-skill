@@ -1,0 +1,44 @@
+{
+  "summary": "Implemented patch::apply_chart_edits_owned and recoverable OwnedPatchError in patch.rs. Added five integration tests covering all edit variants, allocation reuse, malformed scanner data, and owned error lifetimes. All required checks passed.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "outcome": "Passed; formatted the implementation and new integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Passed (exit 0)."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Passed (exit 0): 165 existing unit tests and 5 new integration tests; 0 failures. No doctests were present."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "outcome": "Passed (exit 0)."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "outcome": "Passed (exit 0)."
+    }
+  ],
+  "design_decisions": [
+    "Both public chart-edit APIs use the same planner and sorted splice validation. Existing public enums, structs, error variants, and function signatures remain unchanged; PatchError now additionally implements std::error::Error.",
+    "The owned path validates all planned ranges, overlaps, and final-length arithmetic before touching the caller vector. OwnedPatchError owns that original vector and a PatchError, exposes error() and into_parts(), delegates Display, and returns the typed PatchError through Error::source without borrowing data or edits.",
+    "The mutation phase first compacts retained original bytes leftward, then resizes to the final length and inserts replacement fragments right-to-left. This uses the original buffer and planned fragments, with no full input clone or second output buffer. Intermediate length never exceeds the larger of original and final lengths, preserving pointer and capacity whenever the final result fits.",
+    "Malformed clone template ranges and missing series now return existing typed errors instead of unchecked slicing or subtraction failures. Truncation validates individual consumed structural ranges before combining them; inserted-series anchors validate original series ranges. Existing supported input output and planner rejection rules are retained.",
+    "Tests compare every ChartEdit variant with the borrowed API, check mixed growth/shrink orders and equal-anchor structural insertions, assert original pointers and capacities, and check recovery and Error::source after borrowed inputs leave scope."
+  ],
+  "limitations": [
+    "Validation used only this isolated component workspace and Rust 1.93.1 with cached dependencies; no upstream integration or document-engine visual validation was performed.",
+    "Allocation exhaustion follows normal Vec allocation behavior; the recovery guarantee covers returned validation errors rather than allocator failure.",
+    "No allocation-count benchmark was run. Pointer and capacity assertions verify reuse in the exercised cases; the implementation avoids full-buffer copies by construction."
+  ]
+}

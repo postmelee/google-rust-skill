@@ -1,0 +1,32 @@
+{
+  "reviewer": "Primary agent, non-blinded source review",
+  "criteria": [
+    {
+      "criterion": "The writer reuses the existing planner and does not materialize or clone the whole input/output XML; existing planned fragments are allowed.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "for chunk in planned.chunks(xml) {",
+      "rationale": "The shared validated plan streams source slices and replacement fragments. Whole-output collection remains confined to the legacy API."
+    },
+    {
+      "criterion": "All validation completes before writing, and I/O handling preserves typed causes without explicit flush or panic recovery.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "ValidatedSplices::new(xml, planner.splices)",
+      "rationale": "The constructor completes bounds and overlap checks before writing; write_all maps original errors directly. Original width consistency checks are preserved as explicit typed rejection."
+    },
+    {
+      "criterion": "Public documentation distinguishes validation atomicity from a possible written prefix on I/O failure.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "leave a prefix of the output; this function does not roll back those bytes.",
+      "rationale": "The public documentation distinguishes untouched output on validation rejection from possible partial output on I/O failure."
+    }
+  ],
+  "scope_pass": true,
+  "scope_rationale": "Only patch.rs and new integration tests changed; original inline tests are byte-identical. Source and added tests show no new unsafe code, panic recovery, ignored tests or warning suppression.",
+  "sensitivity_expected": true,
+  "sensitivity_quote": "error[E0432]: unresolved imports `rhwp_ooxml_chart::patch::write_chart_edits`, `rhwp_ooxml_chart::patch::WritePatchError`",
+  "sensitivity_rationale": "Pristine source does not export the requested API/error. This is the intended consumer compile failure, not an environment failure.",
+  "observations": "All automated checks pass; no new unsafe code, check suppression, flush, or panic recovery was found."
+}

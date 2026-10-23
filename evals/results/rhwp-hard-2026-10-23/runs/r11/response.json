@@ -1,0 +1,79 @@
+{
+  "summary": "Implemented patch::write_chart_edits<W: Write + ?Sized> with shared planning and complete preflight splice validation, direct writes from borrowed input slices, typed error chaining, and seven integration tests. All required final checks pass.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/api-design.md",
+    "skill/references/ownership-errors.md",
+    "skill/references/organization.md",
+    "skill/references/safety-docs.md",
+    "workspace/Cargo.toml",
+    "workspace/rust-toolchain.toml",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all --manifest-path workspace/Cargo.toml",
+      "cwd": ".",
+      "outcome": "Passed; formatted implementation and new tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed, exit 0."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed, exit 0: 165 existing unit tests and 7 integration tests; 0 doctests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "outcome": "Initial run failed, exit 101: reversed_empty_ranges on the deliberately malformed 8..4 test span. Replaced it with an explicit std::ops::Range { start: 8, end: 4 } value; no lint suppression."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "outcome": "Initial check passed, exit 0."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "cwd": "workspace",
+      "outcome": "Passed after the test spelling correction."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Final run passed, exit 0: 165 existing unit tests and 7 integration tests; 0 doctests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "outcome": "Final run passed, exit 0."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "outcome": "Final check passed, exit 0."
+    }
+  ],
+  "design_decisions": [
+    "The caller retains ownership of the writer; a mutable borrow and Write + ?Sized support both concrete writers and dyn Write. The writer is neither flushed nor closed.",
+    "Both public chart editing paths call the same plan_chart_edits helper and validate_splices validator. Validation retains the existing range-error precedence and stable insertion ordering, checking all ranges and overlaps before the first writer call.",
+    "The streaming path sends unchanged input slices and existing owned replacement fragments directly through write_all. It never constructs the complete resulting XML. Existing structural fragment allocation remains in the planner.",
+    "WritePatchError owns the original PatchError or io::Error. Display provides context and Error::source exposes the typed original cause; custom I/O payloads survive unchanged. PatchError gains an Error implementation without changing existing variants or public construction.",
+    "write_all preserves short-write, Interrupted, and WriteZero behavior. Permanent I/O failures stop output immediately and may leave a prefix, explicitly documented separately from the untouched-writer guarantee for validation failures.",
+    "Existing function signatures, enum variants, public structs, inline tests, dependencies, and configuration remain intact. New tests cover every ChartEdit variant, mixed edits, same-offset appended series, direct borrowed no-edit input, byte preservation, late range and overlap rejection, late planner rejection, trait objects, and writer error behavior."
+  ],
+  "limitations": [
+    "Validation is the existing mechanical edit validation; data must be scanned from the same XML as documented by the existing API.",
+    "This is an isolated component implementation, not a full document-engine or visual validation.",
+    "No allocation benchmark was run. The streaming memory behavior is supported by implementation inspection and a no-edit pointer-identity test, not invented allocation metrics.",
+    "I/O errors intentionally provide no rollback guarantee."
+  ]
+}

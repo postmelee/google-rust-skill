@@ -1,0 +1,47 @@
+{
+  "summary": "Implemented patch::apply_chart_edits_owned and OwnedPatchError in patch.rs. The owned path shares the existing planner, validates before mutation, and reuses the input allocation whenever the final output fits its capacity. Added eight integration tests; all final required checks pass.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "outcome": "Passed on all four invocations while formatting the implementation and tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Passed initially and after final changes."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Initial run passed 165 existing tests and 6 integration tests; final run passed 165 existing tests and 8 integration tests. Both runs had 0 failures and 0 doc tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "outcome": "Initial run failed with clippy::reversed_empty_ranges on the intentional 5..3 malformed-range test literal. Replaced that literal with an explicit Range struct, without suppressing the lint. Final run passed."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "outcome": "Passed initially and after final changes."
+    }
+  ],
+  "design_decisions": [
+    "Ownership: OwnedPatchError has private owned Vec<u8> and PatchError fields, implements Debug, Display and Error, and exposes error() and into_parts(). PatchError now also implements Error so source() supports typed downcasting. Neither error borrows data or edits.",
+    "Allocation reuse: After validating and sorting all splices, compact untouched bytes leftward in the original vector, resize to the final length, then insert owned fragments right-to-left using copy_within. Intermediate storage never exceeds the greater of original length and final length. No full input clone or second full output buffer is used in the owned application path.",
+    "Failure behavior: Planning, structural cloning, range checks, overlap checks and checked output-size computation finish before vector mutation. All validation errors return the original vector, including its allocation and capacity. Empty edits return immediately.",
+    "Malformed public scanner metadata: Validate template slicing and numbering coordinates, handle empty series collections without subtraction underflow, and validate component ranges before combining structural deletions. These invalid inputs now produce existing typed error variants instead of panicking or hiding malformed ranges.",
+    "Compatibility: Existing public function signatures, enums, variants and public struct layouts remain unchanged. The existing planner is shared by both APIs; valid edit output and insertion ordering are preserved. Existing inline tests and configuration are unchanged.",
+    "Tests cover all ChartEdit variants, multiple same-anchor series insertions, mixed growth and shrinkage at exact capacity, growth without spare capacity, boundary and shared offsets, empty edits, typed error sources, dropped borrowed inputs, retry, malformed ranges and overlap recovery."
+  ],
+  "limitations": [
+    "Validation was limited to the supplied isolated chart crate and synthetic component fixtures; no full document-engine integration or visual rendering comparison was performed.",
+    "Allocation identity and capacity were checked directly in integration tests. No allocation profiler, performance benchmark, or exhaustive property proof was run.",
+    "Allocator failure retains normal Vec allocation behavior and is not represented as a new PatchError variant."
+  ]
+}

@@ -1,0 +1,106 @@
+   Compiling rhwp-ooxml-chart v0.1.0 (<workspace>/crates/rhwp-ooxml-chart)
+error[E0432]: unresolved import `rhwp_ooxml_chart::patch::OwnedPatchError`
+ --> crates/rhwp-ooxml-chart/tests/owned_patch.rs:3:34
+  |
+3 |     self, ChartEdit, EditTarget, OwnedPatchError, PatchError, ValueEdit,
+  |                                  ^^^^^^^^^^^^^^^
+  |                                  |
+  |                                  no `OwnedPatchError` in `patch`
+  |                                  help: a similar name exists in the module: `PatchError`
+
+error[E0425]: cannot find function `apply_chart_edits_owned` in module `patch`
+    --> crates/rhwp-ooxml-chart/tests/owned_patch.rs:37:25
+     |
+  37 |       let output = patch::apply_chart_edits_owned(owned, &data, edits).expect("owned edits succeed");
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `apply_chart_edits`
+     |
+    ::: <workspace>/crates/rhwp-ooxml-chart/src/patch.rs:1044:1
+     |
+1044 | / pub fn apply_chart_edits(
+1045 | |     xml: &[u8],
+1046 | |     data: &ChartData,
+1047 | |     edits: &[ChartEdit],
+1048 | | ) -> Result<Vec<u8>, PatchError> {
+     | |________________________________- similarly named function `apply_chart_edits` defined here
+
+error[E0425]: cannot find function `apply_chart_edits_owned` in module `patch`
+    --> crates/rhwp-ooxml-chart/tests/owned_patch.rs:52:26
+     |
+  52 |       let failure = patch::apply_chart_edits_owned(owned, data, edits).expect_err("invalid edits");
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `apply_chart_edits`
+     |
+    ::: <workspace>/crates/rhwp-ooxml-chart/src/patch.rs:1044:1
+     |
+1044 | / pub fn apply_chart_edits(
+1045 | |     xml: &[u8],
+1046 | |     data: &ChartData,
+1047 | |     edits: &[ChartEdit],
+1048 | | ) -> Result<Vec<u8>, PatchError> {
+     | |________________________________- similarly named function `apply_chart_edits` defined here
+
+error[E0425]: cannot find function `apply_chart_edits_owned` in module `patch`
+    --> crates/rhwp-ooxml-chart/tests/owned_patch.rs:76:29
+     |
+  76 |           let output = patch::apply_chart_edits_owned(xml, &ChartData::default(), &[])
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `apply_chart_edits`
+     |
+    ::: <workspace>/crates/rhwp-ooxml-chart/src/patch.rs:1044:1
+     |
+1044 | / pub fn apply_chart_edits(
+1045 | |     xml: &[u8],
+1046 | |     data: &ChartData,
+1047 | |     edits: &[ChartEdit],
+1048 | | ) -> Result<Vec<u8>, PatchError> {
+     | |________________________________- similarly named function `apply_chart_edits` defined here
+
+error[E0425]: cannot find function `apply_chart_edits_owned` in module `patch`
+    --> crates/rhwp-ooxml-chart/tests/owned_patch.rs:358:16
+     |
+ 358 |           patch::apply_chart_edits_owned(xml, &data, &edits).expect_err("unsafe text")
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `apply_chart_edits`
+     |
+    ::: <workspace>/crates/rhwp-ooxml-chart/src/patch.rs:1044:1
+     |
+1044 | / pub fn apply_chart_edits(
+1045 | |     xml: &[u8],
+1046 | |     data: &ChartData,
+1047 | |     edits: &[ChartEdit],
+1048 | | ) -> Result<Vec<u8>, PatchError> {
+     | |________________________________- similarly named function `apply_chart_edits` defined here
+
+error[E0425]: cannot find function `apply_chart_edits_owned` in module `patch`
+    --> crates/rhwp-ooxml-chart/tests/owned_patch.rs:370:12
+     |
+ 370 |       patch::apply_chart_edits_owned(xml, &data, &[value(0, 0, "42")]).expect("retry succeeds");
+     |              ^^^^^^^^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `apply_chart_edits`
+     |
+    ::: <workspace>/crates/rhwp-ooxml-chart/src/patch.rs:1044:1
+     |
+1044 | / pub fn apply_chart_edits(
+1045 | |     xml: &[u8],
+1046 | |     data: &ChartData,
+1047 | |     edits: &[ChartEdit],
+1048 | | ) -> Result<Vec<u8>, PatchError> {
+     | |________________________________- similarly named function `apply_chart_edits` defined here
+
+error[E0282]: type annotations needed
+  --> crates/rhwp-ooxml-chart/tests/owned_patch.rs:58:24
+   |
+58 |             .and_then(|error| error.downcast_ref::<PatchError>()),
+   |                        ^^^^^  ----- type must be known at this point
+   |
+help: consider giving this closure parameter an explicit type
+   |
+58 |             .and_then(|error: /* Type */| error.downcast_ref::<PatchError>()),
+   |                             ++++++++++++
+
+error[E0282]: type annotations needed
+  --> crates/rhwp-ooxml-chart/tests/owned_patch.rs:65:16
+   |
+65 |     assert_eq!(original.len(), xml.len());
+   |                ^^^^^^^^ cannot infer type
+
+Some errors have detailed explanations: E0282, E0425, E0432.
+For more information about an error, try `rustc --explain E0282`.
+error: could not compile `rhwp-ooxml-chart` (test "owned_patch") due to 8 previous errors
+warning: build failed, waiting for other jobs to finish...

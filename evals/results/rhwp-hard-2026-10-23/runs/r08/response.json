@@ -1,0 +1,51 @@
+{
+  "summary": "Implemented patch::apply_chart_edits_owned and OwnedPatchError, preserving the original vector on validation errors and reusing its allocation whenever the final output fits. Added eight integration tests; all final required checks pass.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all --manifest-path workspace/Cargo.toml",
+      "working_directory": ".",
+      "outcome": "Passed twice while formatting implementation and integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "working_directory": "workspace",
+      "outcome": "Passed initially and after final implementation changes."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "working_directory": "workspace",
+      "outcome": "Initial run passed 165 unit tests and 7 integration tests. Final run passed 165 unit tests and 8 integration tests; 0 failures and 0 ignored tests. No doc tests were present."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "working_directory": "workspace",
+      "outcome": "Initial run failed with reversed_empty_ranges on an intentionally malformed test range literal. Replaced the literal with an explicit Range struct without suppressing the lint. Final run passed."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "working_directory": "workspace",
+      "outcome": "Passed initially and on the final version."
+    }
+  ],
+  "design_decisions": [
+    "Both APIs use the existing Planner through a shared plan_chart_edits helper. Sorted range, overlap, and checked final-length validation completes before the owned vector is mutated.",
+    "The owned emitter first compacts untouched original segments, removing all replaced ranges. It then expands the vector to its final length and inserts planned fragments from right to left. Intermediate length never exceeds max(original length, final length), preserving pointer and capacity whenever final output fits original capacity. No full-input clone or second full-output buffer is used.",
+    "OwnedPatchError has private fields and owns the original Vec and PatchError. Its accessors expose the typed error and recover the vector. Display delegates to PatchError; Error::source exposes a downcastable PatchError. No borrowed data or edits survive in errors.",
+    "Added the standard Error implementation to PatchError without changing its variants, existing public signatures, or existing public struct/enum shapes. Existing inline tests remain intact.",
+    "Malformed clone metadata now produces existing typed errors instead of unchecked indexing or debug assertions; empty scanner data is handled safely. Combined point/series deletions validate constituent element ranges so invalid ranges cannot hide inside an otherwise valid aggregate span.",
+    "Integration tests compare output against the borrowed API for every ChartEdit operation, same-anchor insertions, inherited structural edits, mixed growing/shrinking replacements, and structural growth with deletion. Tests also verify pointer/capacity preservation, untouched recovery, typed error sources, and retry after borrowed contexts are dropped."
+  ],
+  "limitations": [
+    "Validation covers this isolated chart component and does not constitute upstream document-engine or visual validation.",
+    "Allocation identity is verified through vector pointers and capacities; no heap profiler or performance benchmark was run.",
+    "Allocation exhaustion follows normal Vec allocation behavior and is not converted into a PatchError; no panic recovery or unsafe code was added."
+  ]
+}

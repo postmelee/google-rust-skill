@@ -1,0 +1,59 @@
+{
+  "summary": "Added patch::write_chart_edits<W: Write + ?Sized> with a borrowed writer, shared planning and byte emission, complete validation before any write, and typed WritePatchError causes. Added five integration tests covering every existing edit operation, byte preservation, validation atomicity, trait-object writers, short and interrupted writes, and I/O failure behavior.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/rustguide.md",
+    "workspace/Cargo.toml",
+    "workspace/rust-toolchain.toml",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs"
+  ],
+  "commands": [
+    {
+      "command": "rg --files workspace/crates/rhwp-ooxml-chart/tests; sed -n '1,150p' workspace/crates/rhwp-ooxml-chart/tests/structural_patch.rs",
+      "outcome": "Exploratory reads failed because the packet initially had no tests directory or structural_patch.rs; no checks were disabled. Created the permitted tests directory for the new integration test."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all --manifest-path workspace/Cargo.toml",
+      "cwd": ".",
+      "outcome": "Passed; formatted the implementation and new tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed, exit code 0."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed, exit code 0: 165 existing unit tests, 5 new integration tests, 0 doctests; no failed or ignored tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "outcome": "Passed, exit code 0."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "outcome": "Passed, exit code 0."
+    }
+  ],
+  "design_decisions": [
+    "Extracted the existing planner entry sequence so apply_chart_edits and write_chart_edits use the same edit operations and finish stage. Factored sorted bounds and overlap validation out of splice, preserving bounds-before-overlap error precedence and insertion ordering.",
+    "Both output paths iterate the same borrowed chunks: unchanged input slices and planner-owned replacement fragments. The streaming path never constructs or clones the complete XML. Existing series-cloning fragment allocations remain part of the planner.",
+    "The writer remains borrowed with W: Write + ?Sized, supporting concrete writers and dyn Write. write_all supplies short-write, Interrupted, and WriteZero behavior. No flush or close is performed.",
+    "WritePatchError owns either the original PatchError or the original io::Error. Added the standard Error implementation to PatchError so Error::source exposes typed causes. Custom I/O payloads and raw OS error codes are retained.",
+    "All planning, finish-stage validation, bounds checking, and overlap checking complete before accessing the writer. Once writing begins, an I/O error can leave a prefix and is returned immediately; documentation explicitly disclaims rollback.",
+    "Preserved existing public signatures, enum variants and exhaustive matching, struct literal construction, and inline tests. Kept the new error as the two-category Patch/Io sum required by the request. No non_exhaustive attribute was added to existing APIs because the compatibility requirement overrides that general style guidance."
+  ],
+  "limitations": [
+    "Validation covers this isolated crate on the supplied Rust 1.93.1 host; no full document-engine integration, rendered-chart comparison, or upstream contribution was attempted.",
+    "Memory behavior is established by the borrowed-chunk implementation and inspection, not by an allocation benchmark or measured peak-memory claim.",
+    "As with the existing API, ChartData must come from the same XML. No attempt is made to authenticate metadata against arbitrary caller mutations or to add broader planner hardening outside the requested streaming change.",
+    "An I/O failure may leave bytes in the caller-owned sink; transactional rollback is not provided."
+  ]
+}

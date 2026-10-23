@@ -1,0 +1,104 @@
+   Compiling rhwp-ooxml-chart v0.1.0 (<workspace>/crates/rhwp-ooxml-chart)
+error[E0432]: unresolved import `rhwp_ooxml_chart::patch::WritePatchError`
+ --> crates/rhwp-ooxml-chart/tests/write_chart_edits.rs:3:77
+  |
+3 | use rhwp_ooxml_chart::patch::{ChartEdit, EditTarget, PatchError, ValueEdit, WritePatchError};
+  |                                                                             ^^^^^^^^^^^^^^^
+  |                                                                             |
+  |                                                                             no `WritePatchError` in `patch`
+  |                                                                             help: a similar name exists in the module: `PatchError`
+
+error[E0425]: cannot find function `write_chart_edits` in module `patch`
+    --> crates/rhwp-ooxml-chart/tests/write_chart_edits.rs:121:16
+     |
+ 121 |           patch::write_chart_edits(&xml, &data, &edits, sink).expect("stream edits");
+     |                  ^^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `apply_chart_edits`
+     |
+    ::: <workspace>/crates/rhwp-ooxml-chart/src/patch.rs:1044:1
+     |
+1044 | / pub fn apply_chart_edits(
+1045 | |     xml: &[u8],
+1046 | |     data: &ChartData,
+1047 | |     edits: &[ChartEdit],
+1048 | | ) -> Result<Vec<u8>, PatchError> {
+     | |________________________________- similarly named function `apply_chart_edits` defined here
+
+error[E0425]: cannot find function `write_chart_edits` in module `patch`
+    --> crates/rhwp-ooxml-chart/tests/write_chart_edits.rs:135:12
+     |
+ 135 |       patch::write_chart_edits(&xml, &data, &[value(1, 0, "12345")], &mut out).expect("write");
+     |              ^^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `apply_chart_edits`
+     |
+    ::: <workspace>/crates/rhwp-ooxml-chart/src/patch.rs:1044:1
+     |
+1044 | / pub fn apply_chart_edits(
+1045 | |     xml: &[u8],
+1046 | |     data: &ChartData,
+1047 | |     edits: &[ChartEdit],
+1048 | | ) -> Result<Vec<u8>, PatchError> {
+     | |________________________________- similarly named function `apply_chart_edits` defined here
+
+error[E0425]: cannot find function `write_chart_edits` in module `patch`
+    --> crates/rhwp-ooxml-chart/tests/write_chart_edits.rs:144:24
+     |
+ 144 |       let error = patch::write_chart_edits(xml, data, edits, &mut writer).expect_err("reject edits");
+     |                          ^^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `apply_chart_edits`
+     |
+    ::: <workspace>/crates/rhwp-ooxml-chart/src/patch.rs:1044:1
+     |
+1044 | / pub fn apply_chart_edits(
+1045 | |     xml: &[u8],
+1046 | |     data: &ChartData,
+1047 | |     edits: &[ChartEdit],
+1048 | | ) -> Result<Vec<u8>, PatchError> {
+     | |________________________________- similarly named function `apply_chart_edits` defined here
+
+error[E0425]: cannot find function `write_chart_edits` in module `patch`
+    --> crates/rhwp-ooxml-chart/tests/write_chart_edits.rs:315:20
+     |
+ 315 |               patch::write_chart_edits(&xml, &data, &edits, &mut writer).expect_err("I/O failure");
+     |                      ^^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `apply_chart_edits`
+     |
+    ::: <workspace>/crates/rhwp-ooxml-chart/src/patch.rs:1044:1
+     |
+1044 | / pub fn apply_chart_edits(
+1045 | |     xml: &[u8],
+1046 | |     data: &ChartData,
+1047 | |     edits: &[ChartEdit],
+1048 | | ) -> Result<Vec<u8>, PatchError> {
+     | |________________________________- similarly named function `apply_chart_edits` defined here
+
+error[E0425]: cannot find function `write_chart_edits` in module `patch`
+    --> crates/rhwp-ooxml-chart/tests/write_chart_edits.rs:347:24
+     |
+ 347 |       let error = patch::write_chart_edits(&xml, &data, &[], &mut Zero).expect_err("write zero");
+     |                          ^^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `apply_chart_edits`
+     |
+    ::: <workspace>/crates/rhwp-ooxml-chart/src/patch.rs:1044:1
+     |
+1044 | / pub fn apply_chart_edits(
+1045 | |     xml: &[u8],
+1046 | |     data: &ChartData,
+1047 | |     edits: &[ChartEdit],
+1048 | | ) -> Result<Vec<u8>, PatchError> {
+     | |________________________________- similarly named function `apply_chart_edits` defined here
+
+error[E0425]: cannot find function `write_chart_edits` in module `patch`
+    --> crates/rhwp-ooxml-chart/tests/write_chart_edits.rs:356:12
+     |
+ 356 |       patch::write_chart_edits(&[], &data::ChartData::default(), &[], &mut writer)
+     |              ^^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `apply_chart_edits`
+     |
+    ::: <workspace>/crates/rhwp-ooxml-chart/src/patch.rs:1044:1
+     |
+1044 | / pub fn apply_chart_edits(
+1045 | |     xml: &[u8],
+1046 | |     data: &ChartData,
+1047 | |     edits: &[ChartEdit],
+1048 | | ) -> Result<Vec<u8>, PatchError> {
+     | |________________________________- similarly named function `apply_chart_edits` defined here
+
+Some errors have detailed explanations: E0425, E0432.
+For more information about an error, try `rustc --explain E0425`.
+error: could not compile `rhwp-ooxml-chart` (test "write_chart_edits") due to 7 previous errors
+warning: build failed, waiting for other jobs to finish...

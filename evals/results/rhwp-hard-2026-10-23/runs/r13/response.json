@@ -1,0 +1,98 @@
+{
+  "summary": "Implemented apply_chart_edits_owned with recoverable OwnedPatchError, shared planning and validation, and allocation-preserving in-place application. Added six integration tests, including all edit families, mixed size changes, structural changes, error recovery, and malformed public ranges. All required checks passed; no failed checks occurred.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/rustguide.md",
+    "workspace/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml",
+    "workspace/rust-toolchain.toml",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all --manifest-path workspace/Cargo.toml",
+      "cwd": ".",
+      "phase": "initial",
+      "outcome": "Passed, exit 0; formatted implementation and new integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "phase": "initial",
+      "outcome": "Build passed",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "phase": "initial",
+      "outcome": "165 unit tests and 5 integration tests passed; 0 doc tests",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "phase": "initial",
+      "outcome": "Passed with warnings denied",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "phase": "initial",
+      "outcome": "Formatting check passed",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all --manifest-path workspace/Cargo.toml",
+      "cwd": ".",
+      "phase": "final",
+      "outcome": "Passed, exit 0; formatted implementation and new integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "phase": "final",
+      "outcome": "Build passed",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "phase": "final",
+      "outcome": "165 unit tests and 6 integration tests passed; 0 doc tests",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "phase": "final",
+      "outcome": "Passed with warnings denied",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "phase": "final",
+      "outcome": "Formatting check passed",
+      "exit_code": 0
+    }
+  ],
+  "design_decisions": [
+    "The new function takes ownership of Vec<u8> while borrowing ChartData and the edit slice. Planner fragments remain owned as before. No full-input clone or second full-output buffer is used by the owned application path.",
+    "All planning, range checks, ordering, overlap checks, and output-size validation complete before mutating or resizing the input vector. OwnedPatchError owns both the original vector and PatchError and implements Debug, Display, Error, error(), and into_parts(); Error::source exposes PatchError, which now has an additive Error implementation.",
+    "A forward compaction pass applies shrinking/equal replacements and retains growth source ranges, updating only private splice coordinates. A backward expansion pass writes final fragments and gaps. The intermediate length cannot exceed max(original length, final length), so fitting final output preserves pointer and capacity even when growth occurs before shrinkage. Empty plans preserve the vector.",
+    "Both borrowed and owned APIs share the existing planner and splice validation. Existing public signatures, enum variants, exhaustive matches, and struct fields remain unchanged. New code uses safe Rust and standard #[test] tests; explicit compatibility requirements take precedence over general non_exhaustive API guidance.",
+    "Malformed clone-template ranges and empty template data now return existing error variants instead of indexing or arithmetic panics. Truncation validates member ranges before collapsing them into an envelope, so a malformed member cannot be hidden inside otherwise valid endpoints.",
+    "The integration suite compares the owned output against the borrowed API with tight and spare capacities across every ChartEdit variant, 676 mixed replacement-length combinations, Unicode labels, repeated insertion anchors, recovery/retry, source downcasting, and error lifetimes."
+  ],
+  "limitations": [
+    "Validation covers this isolated crate on the installed host with Rust 1.93.1. No full document engine, downstream editor integration, visual rendering review, or additional target run was performed.",
+    "Tests verify pointer and capacity preservation but are not throughput benchmarks or allocator instrumentation. No performance metrics are claimed.",
+    "Allocation failures follow standard Vec allocation behavior and are not converted to OwnedPatchError. The recoverable error guarantee covers validation failures.",
+    "ChartData must refer to the supplied XML as documented; range and overlap validation does not establish that an in-bounds scanner coordinate semantically describes the intended XML element."
+  ]
+}

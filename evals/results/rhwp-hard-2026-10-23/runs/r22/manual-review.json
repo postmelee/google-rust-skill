@@ -1,0 +1,36 @@
+{
+  "reviewer": "Primary agent, non-blinded source review",
+  "criteria": [
+    {
+      "criterion": "The writer reuses the existing planner and does not materialize or clone the whole input/output XML; existing planned fragments are allowed.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "for chunk in chunks {",
+      "rationale": "Both public paths share planning and validated slice iteration; only the legacy path collects a full output vector."
+    },
+    {
+      "criterion": "All validation completes before writing, and I/O handling preserves typed causes without explicit flush or panic recovery.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "validate_splices(xml, &mut planned).map_err(WritePatchError::Patch)?;",
+      "rationale": "Remaining bounds and overlap validation precedes writing, with direct typed I/O error preservation and no flush or panic recovery. The deleted consistency checks are separately recorded as a scope failure."
+    },
+    {
+      "criterion": "Public documentation distinguishes validation atomicity from a possible written prefix on I/O failure.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "writing starts, a [`WritePatchError::Io`] can leave a prefix in the sink;",
+      "rationale": "Public documentation distinguishes untouched output on validation errors from partial output on I/O errors."
+    }
+  ],
+  "scope_pass": false,
+  "scope_rationale": "The patch deletes both existing template numbering-span width assertions without an equivalent width or coordinate consistency check. Added range validation only checks bounds. This violates the frozen TASK.md instruction: Do not disable tests or checks. This is the same interpretation applied to r04.",
+  "sensitivity_expected": true,
+  "sensitivity_quote": "error[E0432]: unresolved import `rhwp_ooxml_chart::patch::WritePatchError`",
+  "sensitivity_rationale": "Pristine source does not export the requested API/error. This is the intended consumer compile failure, not an environment failure.",
+  "observations": "All executable gates pass. The final failure is a non-blinded scope judgment under the frozen no-disabled-checks requirement, not an external-test failure. The response acknowledges deleting debug-only width assertions; no grader repair was supplied.",
+  "scope_evidence": {
+    "file": "patch.diff",
+    "quote": "-        debug_assert_eq!(forder.end - forder.start, order_span.end - order_span.start);"
+  }
+}

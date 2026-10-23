@@ -1,0 +1,584 @@
+--- a/crates/rhwp-ooxml-chart/src/patch.rs
++++ b/crates/rhwp-ooxml-chart/src/patch.rs
+@@ -18,6 +18,7 @@
+ //! 같은 단일 패스 복사로 돈다.
+ 
+ use super::data::{scan_chart_values, BlockShape, ChartData, ChartPoint, ChartSeries};
++use std::io;
+ use std::ops::Range;
+ 
+ /// 무엇을 바꾸는가.
+@@ -252,6 +253,39 @@
+                     "계열 {series} 의 c:idx/c:order 구간이 없어 재번호할 수 없다"
+                 )
+             }
++        }
++    }
++}
++
++impl std::error::Error for PatchError {}
++
++/// Failure to validate chart edits or write their output.
++///
++/// Validation errors leave the writer untouched. I/O errors may leave a written
++/// prefix; output is not rolled back.
++#[derive(Debug)]
++#[non_exhaustive]
++pub enum WritePatchError {
++    /// The edit plan was rejected before writing started.
++    Patch(PatchError),
++    /// The original writer error, retaining any custom payload.
++    Io(io::Error),
++}
++
++impl std::fmt::Display for WritePatchError {
++    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
++        match self {
++            Self::Patch(error) => write!(f, "chart edit validation failed: {error}"),
++            Self::Io(error) => write!(f, "chart output failed: {error}"),
++        }
++    }
++}
++
++impl std::error::Error for WritePatchError {
++    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
++        match self {
++            Self::Patch(error) => Some(error),
++            Self::Io(error) => Some(error),
+         }
+     }
+ }
+@@ -337,29 +371,46 @@
+     }
+ }
+ 
+-/// 정렬 + 커서 단일 패스 복사. 구간이 겹치면 거부한다.
+-///
+-/// 정렬 키는 `(start, end, seq)` — 같은 위치의 길이 0 삽입은 계획 순서를 지키고, 삽입은
+-/// 같은 위치에서 시작하는 치환·삭제보다 앞에 놓인다.
+-fn splice(xml: &[u8], mut planned: Vec<Splice>) -> Result<Vec<u8>, PatchError> {
+-    for p in &planned {
++/// Validate every span before exposing any output. Sorting preserves insertion
++/// order at equal offsets and places insertions before replacements/deletions.
++fn validate_splices(xml: &[u8], planned: &mut [Splice]) -> Result<(), PatchError> {
++    for p in planned.iter() {
+         if p.span.start > p.span.end || p.span.end > xml.len() {
+             return Err(p.addr.out_of_range());
+         }
+     }
+     planned.sort_by_key(|p| (p.span.start, p.span.end, p.seq));
+-
+-    let mut out = Vec::with_capacity(xml.len());
+-    let mut cursor = 0usize;
+-    for p in &planned {
++    let mut cursor = 0;
++    for p in planned {
+         if p.span.start < cursor {
+             return Err(p.addr.overlap());
+         }
+-        out.extend_from_slice(&xml[cursor..p.span.start]);
+-        out.extend_from_slice(&p.bytes);
+         cursor = p.span.end;
+     }
+-    out.extend_from_slice(&xml[cursor..]);
++    Ok(())
++}
++
++/// Borrow unchanged input and replacement fragments from a validated plan.
++fn splice_chunks<'a>(xml: &'a [u8], planned: &'a [Splice]) -> impl Iterator<Item = &'a [u8]> {
++    let mut cursor = 0;
++    let tail = planned.last().map_or(0, |p| p.span.end);
++    planned
++        .iter()
++        .flat_map(move |p| {
++            let chunks = [&xml[cursor..p.span.start], p.bytes.as_slice()];
++            cursor = p.span.end;
++            chunks
++        })
++        .chain(std::iter::once(&xml[tail..]))
++}
++
++fn splice(xml: &[u8], mut planned: Vec<Splice>) -> Result<Vec<u8>, PatchError> {
++    validate_splices(xml, &mut planned)?;
++    let mut out = Vec::with_capacity(xml.len());
++    let chunks = splice_chunks(xml, &planned);
++    for chunk in chunks {
++        out.extend_from_slice(chunk);
++    }
+     Ok(out)
+ }
+ 
+@@ -708,12 +759,20 @@
+         strip_style: bool,
+     ) -> Result<Vec<u8>, PatchError> {
+         let len = self.data.series.len();
+-        let template_index = len - 1;
++        let template_index = len
++            .checked_sub(1)
++            .ok_or(PatchError::SeriesNotClonable { series: number })?;
+         let template = self.series(template_index)?;
+         let new_index = number;
+         let (Some(idx_span), Some(order_span)) = (&template.idx_span, &template.order_span) else {
+             return Err(PatchError::SeriesNotClonable { series: new_index });
+         };
++
++        for span in [idx_span, order_span] {
++            if self.xml.get(span.clone()).is_none() {
++                return Err(PatchError::StructureSpanOutOfRange { series: new_index });
++            }
++        }
+ 
+         // 템플릿의 최종 모양 — 같은 목록의 점 증감을 반영한 행 수.
+         let rows = self.final_len(template_index, EditTarget::Value)?;
+@@ -736,7 +795,10 @@
+         }
+ 
+         // 조각을 다시 스캔한다 — 구간은 조각 기준.
+-        let fragment = &self.xml[template.element_span.clone()];
++        let fragment = self
++            .xml
++            .get(template.element_span.clone())
++            .ok_or(PatchError::StructureSpanOutOfRange { series: new_index })?;
+         let fdata = scan_chart_values(fragment)
+             .map_err(|_| PatchError::SeriesNotClonable { series: new_index })?;
+         let fseries = fdata
+@@ -861,12 +923,6 @@
+         let (Some(fidx), Some(forder)) = (&fseries.idx_span, &fseries.order_span) else {
+             return Err(PatchError::SeriesNotClonable { series: new_index });
+         };
+-        debug_assert_eq!(
+-            fidx.end - fidx.start,
+-            idx_span.end - idx_span.start,
+-            "템플릿과 조각의 idx 구간 길이가 다르다"
+-        );
+-        debug_assert_eq!(forder.end - forder.start, order_span.end - order_span.start);
+         inner.push(
+             fidx.clone(),
+             new_index.to_string().into_bytes(),
+@@ -1046,12 +1102,49 @@
+     data: &ChartData,
+     edits: &[ChartEdit],
+ ) -> Result<Vec<u8>, PatchError> {
++    splice(xml, plan_chart_edits(xml, data, edits)?)
++}
++
++fn plan_chart_edits(
++    xml: &[u8],
++    data: &ChartData,
++    edits: &[ChartEdit],
++) -> Result<Vec<Splice>, PatchError> {
+     let mut planner = Planner::new(xml, data, edits);
+     for edit in edits {
+         planner.add(edit)?;
+     }
+     planner.finish()?;
+-    splice(xml, planner.splices)
++    Ok(planner.splices)
++}
++
++/// Apply chart edits directly to a borrowed writer, including a trait object.
++///
++/// `data` must have been scanned from the same `xml`. Unchanged bytes are copied
++/// verbatim. Only planned replacement and structural fragments are allocated;
++/// no buffer containing the complete output XML is created.
++///
++/// # Errors
++///
++/// All planning and span validation finishes before calling the writer. A
++/// [`WritePatchError::Patch`] therefore leaves it completely untouched. Once
++/// writing starts, a [`WritePatchError::Io`] can leave a prefix in the sink;
++/// there is no rollback guarantee. Short writes and interruptions are handled
++/// through [`io::Write::write_all`], including `WriteZero` errors. The writer is
++/// neither flushed nor closed.
++pub fn write_chart_edits<W: io::Write + ?Sized>(
++    xml: &[u8],
++    data: &ChartData,
++    edits: &[ChartEdit],
++    writer: &mut W,
++) -> Result<(), WritePatchError> {
++    let mut planned = plan_chart_edits(xml, data, edits).map_err(WritePatchError::Patch)?;
++    validate_splices(xml, &mut planned).map_err(WritePatchError::Patch)?;
++    let chunks = splice_chunks(xml, &planned);
++    for chunk in chunks {
++        writer.write_all(chunk).map_err(WritePatchError::Io)?;
++    }
++    Ok(())
+ }
+ 
+ /// 값 구간을 새 텍스트로 갈아끼운 XML 을 만든다.
+--- /dev/null
++++ b/crates/rhwp-ooxml-chart/tests/write_edits.rs
+@@ -0,0 +1,373 @@
++use rhwp_ooxml_chart::data;
++use rhwp_ooxml_chart::patch::{
++    self, ChartEdit, EditTarget, PatchError, ValueEdit, WritePatchError,
++};
++use std::error::Error;
++use std::io::{self, Write};
++
++fn chart() -> Vec<u8> {
++    let mut xml = String::from("<c:chartSpace><c:chart><c:plotArea><c:barChart>");
++    for index in 0..3 {
++        xml.push_str(&format!(
++            r#"<c:ser><c:idx val="{index}"/><c:order val="{index}"/>
++<c:tx><c:v>Series {index}</c:v></c:tx><c:spPr><a:ln/></c:spPr>
++<c:marker><c:symbol val="circle"/></c:marker>
++<c:cat><c:strRef><c:f>Sheet1!$A$1:$A$2</c:f><c:strCache><c:ptCount val="2"/>
++<c:pt idx="0"><c:v>A</c:v></c:pt><c:pt idx="1"><c:v>B</c:v></c:pt>
++</c:strCache></c:strRef></c:cat>
++<c:val><c:numLit><c:ptCount val="2"/>
++<c:pt idx="0"><c:v>1</c:v></c:pt><c:pt idx="1"><c:v>22</c:v></c:pt>
++</c:numLit></c:val><c:extLst><unknown attr="keep"/></c:extLst></c:ser>"#
++        ));
++    }
++    xml.push_str(
++        "</c:barChart></c:plotArea><c:externalData r:id=\"keep\"/></c:chart></c:chartSpace>",
++    );
++    xml.into_bytes()
++}
++
++fn value(series: usize, point: usize, text: &str) -> ChartEdit {
++    ChartEdit::Value(ValueEdit {
++        series,
++        point,
++        target: EditTarget::Value,
++        text: text.into(),
++    })
++}
++
++#[derive(Default)]
++struct ShortWriter {
++    bytes: Vec<u8>,
++    calls: usize,
++    flushes: usize,
++}
++
++impl Write for ShortWriter {
++    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
++        self.calls += 1;
++        if self.calls % 3 == 1 {
++            return Err(io::ErrorKind::Interrupted.into());
++        }
++        let count = bytes.len().min(7);
++        self.bytes.extend_from_slice(&bytes[..count]);
++        Ok(count)
++    }
++
++    fn flush(&mut self) -> io::Result<()> {
++        self.flushes += 1;
++        Ok(())
++    }
++}
++
++#[test]
++fn all_operations_match_buffered_output_through_a_trait_object() {
++    let xml = chart();
++    let data = data::scan_chart_values(&xml).expect("valid chart");
++    let cases = vec![
++        vec![],
++        vec![value(2, 1, "12345"), value(0, 1, "0")],
++        vec![ChartEdit::SeriesName {
++            series: 1,
++            text: "New name".into(),
++        }],
++        vec![ChartEdit::Value(ValueEdit {
++            series: 0,
++            point: 0,
++            target: EditTarget::Label,
++            text: "Unicode λ".into(),
++        })],
++        vec![ChartEdit::AppendPoints {
++            series: 2,
++            target: EditTarget::Value,
++            texts: vec!["3".into()],
++        }],
++        vec![ChartEdit::TruncatePoints {
++            series: 1,
++            target: EditTarget::Label,
++            keep: 1,
++        }],
++        vec![
++            ChartEdit::AppendSeries {
++                name: Some("New".into()),
++                labels: Some(vec!["C".into(), "D".into()]),
++                values: vec!["3".into(), "4".into()],
++            },
++            ChartEdit::AppendSeries {
++                name: None,
++                labels: None,
++                values: vec!["5".into(), "6".into()],
++            },
++        ],
++        vec![ChartEdit::TruncateSeries { keep: 1 }],
++        vec![
++            ChartEdit::InsertSeries {
++                at: 1,
++                name: None,
++                labels: None,
++                values: vec!["5".into(), "6".into()],
++            },
++            ChartEdit::InsertSeries {
++                at: 2,
++                name: Some("Next".into()),
++                labels: None,
++                values: vec!["7".into(), "8".into()],
++            },
++        ],
++        vec![ChartEdit::RemoveSeries { at: 1 }],
++        vec![
++            value(0, 0, "99"),
++            ChartEdit::AppendPoints {
++                series: 2,
++                target: EditTarget::Value,
++                texts: vec!["3".into()],
++            },
++            ChartEdit::AppendSeries {
++                name: None,
++                labels: None,
++                values: vec!["5".into(), "6".into(), "7".into()],
++            },
++        ],
++    ];
++    for edits in cases {
++        let expected = patch::apply_chart_edits(&xml, &data, &edits).expect("buffered edit");
++        let mut writer = ShortWriter::default();
++        let sink: &mut dyn Write = &mut writer;
++        patch::write_chart_edits(&xml, &data, &edits, sink).expect("streamed edit");
++        assert_eq!(writer.bytes, expected, "edits: {edits:?}");
++        assert_eq!(writer.flushes, 0);
++        assert!(String::from_utf8_lossy(&writer.bytes).contains("externalData r:id=\"keep\""));
++    }
++}
++
++#[test]
++fn unchanged_and_replaced_bytes_are_preserved_exactly() {
++    let xml = chart();
++    let data = data::scan_chart_values(&xml).expect("valid chart");
++    let span = data.series[1].values[1].span.clone().expect("value span");
++    let mut expected = xml[..span.start].to_vec();
++    expected.extend_from_slice(b"123456");
++    expected.extend_from_slice(&xml[span.end..]);
++    let mut output = Vec::new();
++    patch::write_chart_edits(&xml, &data, &[value(1, 1, "123456")], &mut output).expect("write");
++    assert_eq!(output, expected);
++    output.clear();
++    patch::write_chart_edits(&xml, &data, &[], &mut output).expect("identity");
++    assert_eq!(output, xml);
++}
++
++fn assert_untouched(xml: &[u8], data: &data::ChartData, edits: &[ChartEdit], expected: PatchError) {
++    let mut writer = ShortWriter {
++        bytes: b"existing".to_vec(),
++        ..Default::default()
++    };
++    let error = patch::write_chart_edits(xml, data, edits, &mut writer).expect_err("invalid edit");
++    assert_eq!(
++        error
++            .source()
++            .expect("typed source")
++            .downcast_ref::<PatchError>(),
++        Some(&expected)
++    );
++    assert!(matches!(error, WritePatchError::Patch(ref error) if *error == expected));
++    assert!(!error.to_string().is_empty());
++    assert_eq!(writer.calls, 0);
++    assert_eq!(writer.flushes, 0);
++    assert_eq!(writer.bytes, b"existing");
++}
++
++#[test]
++fn late_invalid_and_overlapping_spans_never_touch_the_writer() {
++    let xml = chart();
++    let data = data::scan_chart_values(&xml).expect("valid chart");
++    let edits = [value(0, 0, "9"), value(2, 1, "8")];
++    let mut bad = data.clone();
++    bad.series[2].values[1].span = Some(xml.len()..xml.len() + 1);
++    assert_untouched(
++        &xml,
++        &bad,
++        &edits,
++        PatchError::SpanOutOfRange {
++            series: 2,
++            point: 1,
++        },
++    );
++    bad.series[2].values[1].span = Some(std::ops::Range { start: 8, end: 7 });
++    assert_untouched(
++        &xml,
++        &bad,
++        &edits,
++        PatchError::SpanOutOfRange {
++            series: 2,
++            point: 1,
++        },
++    );
++    bad.series[2].values[1].span = data.series[0].values[0].span.clone();
++    assert_untouched(
++        &xml,
++        &bad,
++        &edits,
++        PatchError::OverlappingSpans {
++            series: 2,
++            point: 1,
++        },
++    );
++    let mut bad = data.clone();
++    bad.series[2].name_span = Some(xml.len()..xml.len() + 1);
++    assert_untouched(
++        &xml,
++        &bad,
++        &[
++            value(0, 0, "9"),
++            ChartEdit::SeriesName {
++                series: 2,
++                text: "x".into(),
++            },
++        ],
++        PatchError::StructureSpanOutOfRange { series: 2 },
++    );
++    assert_untouched(
++        &xml,
++        &data,
++        &[
++            value(0, 0, "9"),
++            ChartEdit::TruncatePoints {
++                series: 2,
++                target: EditTarget::Value,
++                keep: 1,
++            },
++            value(2, 1, "8"),
++        ],
++        PatchError::OverlappingSpans {
++            series: 2,
++            point: 1,
++        },
++    );
++    assert_untouched(
++        &xml,
++        &data,
++        &[value(0, 0, "9"), value(2, 1, "&")],
++        PatchError::UnsafeText {
++            series: 2,
++            point: 1,
++        },
++    );
++}
++
++#[derive(Debug)]
++struct Payload(u32);
++impl std::fmt::Display for Payload {
++    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
++        write!(f, "payload {}", self.0)
++    }
++}
++impl Error for Payload {}
++
++struct FailingWriter {
++    bytes: Vec<u8>,
++    remaining: usize,
++    failure: Option<io::Error>,
++    failed: bool,
++}
++impl Write for FailingWriter {
++    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
++        assert!(!self.failed, "no calls after terminal failure");
++        if self.remaining == 0 {
++            self.failed = true;
++            return match self.failure.take() {
++                Some(error) => Err(error),
++                None => Ok(0),
++            };
++        }
++        let count = bytes.len().min(self.remaining);
++        self.bytes.extend_from_slice(&bytes[..count]);
++        self.remaining -= count;
++        Ok(count)
++    }
++    fn flush(&mut self) -> io::Result<()> {
++        panic!("caller owns flushing")
++    }
++}
++
++#[test]
++fn io_error_retains_payload_and_written_prefix() {
++    let xml = chart();
++    let data = data::scan_chart_values(&xml).expect("valid chart");
++    let edits = [value(0, 0, "987654321")];
++    let expected = patch::apply_chart_edits(&xml, &data, &edits).expect("edit");
++    let limit = data.series[0].values[0]
++        .span
++        .as_ref()
++        .expect("value span")
++        .start
++        + 3;
++    let mut writer = FailingWriter {
++        bytes: Vec::new(),
++        remaining: limit,
++        failure: Some(io::Error::other(Payload(42))),
++        failed: false,
++    };
++    let error = patch::write_chart_edits(&xml, &data, &edits, &mut writer).expect_err("sink fails");
++    let source = error
++        .source()
++        .expect("I/O source")
++        .downcast_ref::<io::Error>()
++        .expect("typed I/O error");
++    assert_eq!(
++        source
++            .get_ref()
++            .expect("payload")
++            .downcast_ref::<Payload>()
++            .expect("original payload")
++            .0,
++        42
++    );
++    assert!(matches!(error, WritePatchError::Io(_)));
++    assert_eq!(writer.bytes, expected[..limit]);
++}
++
++#[test]
++fn zero_write_is_reported_and_stops_output() {
++    let xml = chart();
++    let data = data::scan_chart_values(&xml).expect("valid chart");
++    let mut writer = FailingWriter {
++        bytes: Vec::new(),
++        remaining: 19,
++        failure: None,
++        failed: false,
++    };
++    let error = patch::write_chart_edits(&xml, &data, &[], &mut writer).expect_err("zero write");
++    assert!(
++        matches!(error, WritePatchError::Io(ref error) if error.kind() == io::ErrorKind::WriteZero)
++    );
++    assert_eq!(writer.bytes, xml[..19]);
++}
++
++#[test]
++fn invalid_clone_template_spans_are_validation_errors() {
++    let xml = chart();
++    let data = data::scan_chart_values(&xml).expect("valid chart");
++    let edits = [
++        value(0, 0, "9"),
++        ChartEdit::AppendSeries {
++            name: None,
++            labels: None,
++            values: vec!["3".into(), "4".into()],
++        },
++    ];
++    let mut bad = data.clone();
++    bad.series[2].element_span.end = xml.len() + 1;
++    assert_untouched(
++        &xml,
++        &bad,
++        &edits,
++        PatchError::StructureSpanOutOfRange { series: 3 },
++    );
++    let mut bad = data.clone();
++    bad.series[2].idx_span = Some(std::ops::Range { start: 2, end: 1 });
++    assert_untouched(
++        &xml,
++        &bad,
++        &edits,
++        PatchError::StructureSpanOutOfRange { series: 3 },
++    );
++}

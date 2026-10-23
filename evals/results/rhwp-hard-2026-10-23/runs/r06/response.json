@@ -1,0 +1,57 @@
+{
+  "summary": "Added write_chart_edits with borrowed Write + ?Sized sinks, complete validation before output, direct slice streaming, and typed Patch/Io error sources. Added six integration tests; all required final checks pass.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "workspace/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "cwd": ".",
+      "outcome": "Failed (exit 1): initially invoked at packet root, which has no Cargo.toml; corrected working directory."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "cwd": "workspace",
+      "outcome": "Passed twice while formatting implementation and new integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed both initial and final runs."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Initial run passed 165 existing tests plus 5 integration tests. Final run passed 165 existing tests plus 6 integration tests; 0 doc tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "outcome": "Passed both initial and final runs without warnings."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "outcome": "Passed both initial and final runs."
+    }
+  ],
+  "design_decisions": [
+    "Both public chart-edit entrypoints share plan_chart_edits and validate_splices. Validation preserves range-error precedence and sorting by start/end/planning sequence, but now finishes the overlap pass before any output.",
+    "The caller retains ownership of XML, scanned data, edit list and writer. The streaming path borrows unchanged byte slices and owns only planner replacement/structural fragments; it never builds a complete output buffer.",
+    "write_all implements short-write completion, Interrupted retry and WriteZero errors. Errors stop writing immediately; validation leaves the writer untouched, while I/O failure can leave a prefix. No flush or close is performed.",
+    "WritePatchError owns the original PatchError or io::Error and exposes it through Error::source. PatchError gains an additive Error implementation. Existing public signatures, fields, variants and exhaustive matching remain unchanged; only the new error enum is non-exhaustive.",
+    "Checked template lookup and slice access reject empty-series cloning and out-of-range template/index/order spans through existing PatchError variants instead of indexing panics.",
+    "Integration coverage exercises every ChartEdit variant, same-position append ordering, exact output parity, identity output, trait objects, borrowed input slices, late invalid/reversed/overlapping spans, structural overlaps, custom I/O payloads, prefix failures and no flush."
+  ],
+  "limitations": [
+    "This is isolated component verification; no full document engine, rendering comparison, upstream integration or memory benchmark was run.",
+    "The API retains the existing requirement that ChartData describes the same XML. Planned replacement and structural fragments may allocate; no constant-memory guarantee is claimed.",
+    "No rollback is possible after an I/O failure; the caller must handle any prefix already written."
+  ]
+}

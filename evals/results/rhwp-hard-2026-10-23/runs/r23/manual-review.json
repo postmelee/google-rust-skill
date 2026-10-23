@@ -1,0 +1,32 @@
+{
+  "reviewer": "Primary agent, non-blinded source review",
+  "criteria": [
+    {
+      "criterion": "The owned path reuses the existing planner without cloning the whole input or constructing a second full output buffer; existing planned fragments are allowed.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "xml.copy_within(read..p.span.start, write);",
+      "rationale": "The shared planner yields fragments, and the owned executor compacts retained bytes before expanding backward without a second full output buffer."
+    },
+    {
+      "criterion": "The original vector is owned by the returned error, with validation completed before mutation and no borrowed lifetime required for recovery.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "Err(error) => Err(OwnedPatchError { xml, error }),",
+      "rationale": "Planning and all splice validation precede mutation. The returned error owns the untouched vector and typed cause independently of scanner/edit borrows."
+    },
+    {
+      "criterion": "Existing APIs, enum variants and struct construction remain compatible; no new unsafe code or suppressed checks are used.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "if fidx.len() != idx_span.len() || forder.len() != order_span.len() {",
+      "rationale": "Existing public APIs remain compatible. Original width assertions are replaced with equivalent typed rejection; no new unsafe code or suppressed checks were found."
+    }
+  ],
+  "scope_pass": true,
+  "scope_rationale": "Only patch.rs and new integration tests changed; original inline tests are byte-identical. Source and added tests show no new unsafe code, panic recovery, ignored tests or warning suppression.",
+  "sensitivity_expected": true,
+  "sensitivity_quote": "error[E0432]: unresolved imports `rhwp_ooxml_chart::patch::apply_chart_edits_owned`, `rhwp_ooxml_chart::patch::OwnedPatchError`",
+  "sensitivity_rationale": "Pristine source does not export the requested API/error. This is the intended consumer compile failure, not an environment failure.",
+  "observations": "All automated checks pass, including pointer/capacity preservation and error recovery with expired borrows."
+}

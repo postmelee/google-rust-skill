@@ -1,0 +1,190 @@
+
+running 165 tests
+test data::tests::non_utf8_input_is_refused ... ok
+test data::tests::chart_without_series_is_refused ... ok
+test data::tests::empty_value_element_is_readable_with_no_span ... ok
+test data::tests::literal_values_take_the_same_path_as_cached_ones ... ok
+test data::tests::non_sequential_label_index_is_refused ... ok
+test data::tests::extension_subtrees_are_not_scanned_as_values ... ok
+test data::tests::reversed_point_index_is_refused ... ok
+test data::tests::duplicate_point_index_is_refused ... ok
+test data::tests::reference_formulas_are_not_mistaken_for_values ... ok
+test data::tests::data_label_text_does_not_become_the_series_name ... ok
+test data::tests::multi_level_labels_keep_the_document_readable ... ok
+test data::tests::prefix_is_not_hardcoded ... ok
+test data::tests::scans_name_labels_and_values ... ok
+test data::tests::scatter_series_use_x_and_y ... ok
+test data::tests::scatter_x_block_is_named_xval_in_the_refusal ... ok
+test data::tests::spans_slice_back_to_their_own_text ... ok
+test data::tests::sparse_point_index_is_refused ... ok
+test parser::tests::test_dpt_explosion_not_promoted_to_series ... ok
+test parser::tests::test_parse_auto_title_deleted ... ok
+test parser::tests::test_parse_bar3d_bar ... ok
+test parser::tests::test_parse_bar3d_col ... ok
+test parser::tests::test_parse_bar_gap_width_and_depth ... ok
+test parser::tests::test_parse_bar_chart ... ok
+test parser::tests::test_ofpie_split_type_parsed ... ok
+test parser::tests::test_parse_bar_gap_width_not_captured ... ok
+test parser::tests::test_parse_combo_grouping_no_cross_contamination ... ok
+test parser::tests::test_parse_grouping_percent_stacked ... ok
+test parser::tests::test_parse_grouping_stacked ... ok
+test parser::tests::test_parse_combo_dual_axis ... ok
+test parser::tests::test_parse_grouping_clustered_default ... ok
+test parser::tests::test_parse_horizontal_bar ... ok
+test parser::tests::test_parse_legend_pos_default_bottom ... ok
+test parser::tests::test_parse_legend_pos_right ... ok
+test parser::tests::test_parse_line3d_routing ... ok
+test parser::tests::test_parse_is_3d_flag ... ok
+test parser::tests::test_parse_line_grouping_percent_stacked ... ok
+test parser::tests::test_parse_line_grouping_stacked ... ok
+test parser::tests::test_parse_line_grouping_standard ... ok
+test parser::tests::test_parse_malformed ... ok
+test parser::tests::test_parse_ofpie ... ok
+test parser::tests::test_parse_ofpie_bar_type ... ok
+test parser::tests::test_parse_line_marker_flag ... ok
+test parser::tests::test_parse_ofpie_info ... ok
+test parser::tests::test_parse_ofpie_split_pos ... ok
+test parser::tests::test_parse_pie3d ... ok
+test parser::tests::test_parse_pie_chart ... ok
+test parser::tests::test_parse_pie_explosion ... ok
+test parser::tests::test_parse_scatter_marker ... ok
+test parser::tests::test_parse_scatter_style_line ... ok
+test parser::tests::test_parse_series_marker_ignored ... ok
+test parser::tests::test_parse_scatter_style_line_marker ... ok
+test parser::tests::test_parse_scatter_style_smooth_marker ... ok
+test parser::tests::test_parse_serlines_not_leaked_to_barchart ... ok
+test parser::tests::test_parse_title_elem_without_text ... ok
+test parser::tests::test_parse_stock_hlc ... ok
+test parser::tests::test_parse_view3d_fields ... ok
+test parser::tests::test_parse_stock_no_line_marker_cross_talk ... ok
+test parser::tests::test_parse_view3d_defaults_when_absent ... ok
+test parser::tests::test_parse_stock_ohlc_up_down_bars ... ok
+test patch::tests::bad_addresses_are_refused ... ok
+test patch::tests::blank_value_cannot_be_patched_but_its_neighbours_can ... ok
+test patch::tests::category_label_edit_replaces_the_cache_text ... ok
+test patch::tests::duplicate_target_is_refused ... ok
+test patch::tests::identity_edit_is_byte_identical ... ok
+test parser::tests::test_scatter_no_secondary_axis ... ok
+test patch::tests::multiple_edits_apply_in_any_order ... ok
+test patch::tests::no_edits_returns_the_input ... ok
+test patch::tests::shorter_and_longer_replacements_shift_only_the_tail ... ok
+test patch::tests::unknown_elements_survive_the_edit ... ok
+test patch::tests::unsafe_text_is_refused ... ok
+test renderer::tests::test_axis_headroom_bar_max_on_boundary ... ok
+test renderer::tests::test_axis_no_headroom_when_max_off_boundary ... ok
+test renderer::tests::test_axis_horizontal_clustered_headroom_keeps_step ... ok
+test renderer::tests::test_axis_headroom_scatter_y_on_boundary ... ok
+test renderer::tests::test_axis_3d_clustered_no_headroom ... ok
+test renderer::tests::test_axis_horizontal_stacked_fine_ticks ... ok
+test renderer::tests::test_axis_vertical_stacked_coarse_ticks ... ok
+test renderer::tests::test_axis_3d_stacked_vertical_extra_headroom ... ok
+test renderer::tests::test_bar3d_axis_ticks_horizontal ... ok
+test renderer::tests::test_bar3d_bars_depth_centered ... ok
+test renderer::tests::test_bar3d_axis_ticks_vertical ... ok
+test renderer::tests::test_bar3d_room_grid_on_back_wall ... ok
+test renderer::tests::test_bar3d_room_depth_ratio ... ok
+test renderer::tests::test_bar3d_clustered_faces_both_orientations ... ok
+test renderer::tests::test_bar3d_shear_direction ... ok
+test renderer::tests::test_bar3d_degenerate_cameras ... ok
+test renderer::tests::test_format_num ... ok
+test renderer::tests::test_bar3d_stacked_all_segments_extrude ... ok
+test renderer::tests::test_color_hex ... ok
+test renderer::tests::test_hbar_clustered_slot_series1_at_bottom ... ok
+test renderer::tests::test_bar3d_room_hancom_line_style ... ok
+test renderer::tests::test_clustered_bars_distinct_x ... ok
+test renderer::tests::test_default_palette_hancom_order ... ok
+test renderer::tests::test_bar3d_zero_segment_skipped ... ok
+test renderer::tests::test_bar3d_room_only_when_3d ... ok
+test renderer::tests::test_horizontal_bar_categories_bottom_up ... ok
+test renderer::tests::test_bar3d_faces_within_plot ... ok
+test renderer::tests::test_horizontal_bar_category_labels_not_clipped ... ok
+test renderer::tests::test_bar3d_thickness_from_gap_width ... ok
+test renderer::tests::test_legend_order_3d_same_as_2d ... ok
+test renderer::tests::test_legend_order_combo_forward ... ok
+test renderer::tests::test_hbar_single_category_half_step ... ok
+test renderer::tests::test_legend_order_forward_for_stock_and_bottom_legend ... ok
+test renderer::tests::test_legend_order_rule_table ... ok
+test renderer::tests::test_legend_swatch_plain_line_no_glyph ... ok
+test renderer::tests::test_legend_swatch_marker_line_has_glyph ... ok
+test renderer::tests::test_legend_swatch_scatter_line_marker_line_glyph ... ok
+test renderer::tests::test_legend_swatch_square_unchanged_for_bars ... ok
+test renderer::tests::test_legend_swatch_scatter_marker_only_glyph_only ... ok
+test renderer::tests::test_line_clustered_unchanged ... ok
+test renderer::tests::test_legend_swatch_stock_blank_except_close ... ok
+test renderer::tests::test_line_marker_shape_cycle ... ok
+test renderer::tests::test_line_percent_axis_labels ... ok
+test renderer::tests::test_line_percent_zero_sum_category_no_nan ... ok
+test renderer::tests::test_line_no_markers_by_default ... ok
+test renderer::tests::test_line_markers_rendered ... ok
+test renderer::tests::test_line_marker_x_series4 ... ok
+test renderer::tests::test_line_percent_top_series_flat ... ok
+test renderer::tests::test_line_points_at_category_slot_centers ... ok
+test renderer::tests::test_line_stacked_axis_from_category_sum ... ok
+test renderer::tests::test_line_stacked_series_order ... ok
+test renderer::tests::test_ofpie_bar_secondary_first_split_cat_on_top ... ok
+test renderer::tests::test_ofpie_combined_slice_uses_palette4 ... ok
+test renderer::tests::test_ofpie_legend_categories_in_order_no_combined ... ok
+test renderer::tests::test_ofpie_pie_secondary_and_serlines ... ok
+test renderer::tests::test_ofpie_two_values_plain_pie_fallback ... ok
+test renderer::tests::test_palette_index4_measured ... ok
+test renderer::tests::test_ofpie_split_pos_respected ... ok
+test renderer::tests::test_ofpie_non_pos_split_type_falls_back_to_default ... ok
+test renderer::tests::test_percent_stacked_axis_and_single_column ... ok
+test renderer::tests::test_pie3d_ellipse_ratio_follows_rotx ... ok
+test renderer::tests::test_pie3d_degenerate_cameras ... ok
+test renderer::tests::test_pie3d_wall_clipped_at_boundaries ... ok
+test renderer::tests::test_pie3d_wall_height_measured ... ok
+test renderer::tests::test_pie3d_wall_lower_half_only ... ok
+test renderer::tests::test_pie3d_walls_before_tops ... ok
+test renderer::tests::test_pie_2d_no_pie3d_vocab ... ok
+test renderer::tests::test_pie_legend_reserves_space_regardless_of_series_name ... ok
+test renderer::tests::test_pie_exploded_slices_offset ... ok
+test renderer::tests::test_pie_slices_butt_joined_no_white_border ... ok
+test renderer::tests::test_render_auto_title_placeholder ... ok
+test renderer::tests::test_render_empty_chart ... ok
+test renderer::tests::test_render_column ... ok
+test renderer::tests::test_render_auto_title_single_series_uses_name ... ok
+test renderer::tests::test_render_auto_title_single_series_fallbacks ... ok
+test renderer::tests::test_render_combo_dual_axis ... ok
+test renderer::tests::test_render_legend_bottom_default_unchanged ... ok
+test renderer::tests::test_render_legend_right_narrow_chart_no_panic ... ok
+test renderer::tests::test_render_legend_right_vertical ... ok
+test renderer::tests::test_render_no_auto_title_when_deleted_or_absent ... ok
+test renderer::tests::test_render_scatter_decimal_axis_labels ... ok
+test renderer::tests::test_render_scatter_line_marker ... ok
+test renderer::tests::test_render_scatter_line_only ... ok
+test renderer::tests::test_render_scatter_zero_baseline ... ok
+test renderer::tests::test_shade_lighten_darken ... ok
+test renderer::tests::test_render_scatter_marker_only ... ok
+test renderer::tests::test_stacked_bars_share_x_per_category ... ok
+test renderer::tests::test_scatter_markers_use_cycle ... ok
+test renderer::tests::test_render_scatter_smooth ... ok
+test renderer::tests::test_stock_axis_unconditional_headroom ... ok
+test renderer::tests::test_stock_hilow_lines_per_category ... ok
+test renderer::tests::test_stacked_vertical_bars_align_with_category_labels ... ok
+test renderer::tests::test_stock_ohlc_candles ... ok
+test renderer::tests::test_stock_close_marker_only ... ok
+test renderer::tests::test_stock_series_count_and_line_are_independent ... ok
+
+test result: ok. 165 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 5 tests
+test zero_writes_report_write_zero_without_flushing ... ok
+test io_failures_stop_at_the_prefix_and_keep_the_original_typed_payload ... ok
+test late_invalid_bounds_and_overlaps_never_touch_the_writer ... ok
+test planning_and_finish_failures_never_touch_the_writer ... ok
+test every_edit_kind_matches_buffered_output_with_short_writes_and_a_trait_object ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling rhwp-ooxml-chart v0.1.0 (<workspace>/crates/rhwp-ooxml-chart)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.03s
+     Running unittests src/lib.rs (target/pr-review/debug/deps/rhwp_ooxml_chart-0f5aa6dead658201)
+     Running tests/write_edits.rs (target/pr-review/debug/deps/write_edits-9f0052896b868bfa)
+   Doc-tests rhwp_ooxml_chart

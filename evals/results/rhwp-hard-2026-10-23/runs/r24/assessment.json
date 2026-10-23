@@ -1,0 +1,116 @@
+{
+  "case": "H1",
+  "changed_files": [
+    "crates/rhwp-ooxml-chart/src/patch.rs",
+    "crates/rhwp-ooxml-chart/tests/write_edits.rs"
+  ],
+  "scope_errors": [],
+  "commands": {
+    "patch": {
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "<evaluation-repository>/evals/results/rhwp-hard-2026-10-23/runs/r24/patch.diff"
+      ],
+      "exit_code": 0,
+      "log": "patch.log"
+    },
+    "build": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "build",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "--workspace"
+      ],
+      "exit_code": 0,
+      "log": "build.log"
+    },
+    "tests": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "test",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "--workspace"
+      ],
+      "exit_code": 0,
+      "log": "tests.log"
+    },
+    "clippy": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "clippy",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "--workspace",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "log": "clippy.log"
+    },
+    "format": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "log": "format.log"
+    },
+    "oracle": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "test",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "--test",
+        "__external"
+      ],
+      "exit_code": 0,
+      "log": "oracle.log"
+    },
+    "sensitivity": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "test",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "--tests"
+      ],
+      "exit_code": 101,
+      "log": "sensitivity.log"
+    }
+  },
+  "passing_tests_before_oracle": 170,
+  "external_tests": {
+    "io_failure_keeps_prefix_and_original_typed_payload": "ok",
+    "zero_write_becomes_write_zero": "ok",
+    "late_validation_failures_never_touch_the_sink": "ok",
+    "all_operations_match_frozen_outputs_and_old_consumers": "ok"
+  },
+  "automated_pass": true,
+  "manual_review_required": true
+}

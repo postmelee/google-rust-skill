@@ -1,0 +1,64 @@
+{
+  "summary": "Added patch::write_chart_edits<W: Write + ?Sized> with complete preflight validation, direct borrowed-slice streaming, and typed WritePatchError causes. Added five integration tests; all required checks passed.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/api-design.md",
+    "skill/references/ownership-errors.md",
+    "skill/references/organization.md",
+    "skill/references/safety-docs.md",
+    "workspace/Cargo.toml",
+    "workspace/rust-toolchain.toml",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all --manifest-path workspace/Cargo.toml",
+      "cwd": ".",
+      "outcome": "Passed; formatted the implementation and integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed (exit 0)."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed (exit 0): 165 existing unit tests, 5 new integration tests, 0 doc tests; no failed or ignored tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "outcome": "Passed (exit 0)."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "outcome": "Passed (exit 0)."
+    },
+    {
+      "command": "rg --files -g '*fmt*' -g 'AGENTS.md' .",
+      "cwd": ".",
+      "outcome": "Inspection returned exit 1 because the packet contained no matching files; this was not a failed validation check."
+    }
+  ],
+  "design_decisions": [
+    "The new public API borrows the XML, data, edit list, and writer. The Write + ?Sized bound supports concrete and trait-object writers without transferring ownership.",
+    "Both output APIs use the existing Planner through plan_chart_edits and a shared validate_splices preflight. Bounds are checked before sorting; overlaps are fully checked after sorting, preserving existing error precedence and same-offset insertion order.",
+    "The streaming path writes original XML slices and planned replacement fragments with write_all. It never calls the full-output buffering API. Existing structural clone fragments remain allocated by the planner.",
+    "Patch errors are reported before any writer method is called. I/O errors stop emission immediately and retain the original io::Error including custom payloads; written prefixes are not rolled back. The writer is never flushed or closed.",
+    "WritePatchError derives Debug and implements Display and Error. Error::source returns the original typed PatchError or io::Error; adding Error for PatchError enables this without changing its variants.",
+    "Existing public signatures, enum variants, struct fields, and inline tests remain unchanged. Template fragment slicing now checks bounds and empty template selection returns an existing error rather than indexing invalid memory ranges.",
+    "Integration coverage exercises all ChartEdit variants, combinations and same-anchor insertions, byte preservation, trait objects, late invalid/reversed/overlapping spans, structural validation, no writer calls on validation failure, custom error downcasting, partial-prefix failures, Interrupted, short writes, WriteZero, no flush, and writer reuse."
+  ],
+  "limitations": [
+    "This is a component-level check of the supplied minimal crate, not full document-engine integration or visual validation.",
+    "No allocation benchmark or peak-memory measurement was run. The absence of a full-output buffer on the streaming path was assessed from the implementation.",
+    "The documented existing requirement that ChartData originates from the same XML remains in force; the API does not validate arbitrary mismatched metadata as a separate input format."
+  ]
+}

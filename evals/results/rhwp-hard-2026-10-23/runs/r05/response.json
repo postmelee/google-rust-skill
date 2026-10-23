@@ -1,0 +1,69 @@
+{
+  "summary": "Added allocation-reusing apply_chart_edits_owned and OwnedPatchError with typed error chaining and untouched-input recovery. Shared the existing planner and splice validation, hardened malformed structural coordinates, and added eight integration tests covering all edit variants, recovery, allocation identity and mixed growth/shrinkage.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/api-design.md",
+    "skill/references/ownership-errors.md",
+    "skill/references/safety-docs.md",
+    "workspace/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --manifest-path workspace/Cargo.toml --all",
+      "directory": ".",
+      "outcome": "Passed; formatted implementation and new tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "directory": "workspace",
+      "outcome": "Passed."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "directory": "workspace",
+      "outcome": "Initial run passed: 165 existing unit tests, 7 integration tests, 0 doctests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "directory": "workspace",
+      "outcome": "Initial run failed: four reversed_empty_ranges diagnostics for intentionally malformed range literals in integration tests. Replaced them with explicit Range struct construction; no lint suppression."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "directory": "workspace",
+      "outcome": "Passed after test corrections and additional recovery cases."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "directory": "workspace",
+      "outcome": "Final run passed without warnings."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "directory": "workspace",
+      "outcome": "Passed."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "directory": "workspace",
+      "outcome": "Final run passed: 165 existing unit tests, 8 integration tests, 0 doctests."
+    }
+  ],
+  "design_decisions": [
+    "The new API transfers ownership of Vec<u8>; its error owns that exact vector and an owned PatchError, so recovery and Error::source remain valid after data and edits are dropped. Existing public signatures, enum variants and public-field structures are unchanged. PatchError gains the standard Error implementation.",
+    "Both public editing APIs use the existing planner and shared sorted range/overlap validation. Final output size is checked before input mutation. Malformed clone spans, empty template data, combined deletion spans and insertion anchors receive typed errors instead of relying on slicing panics or debug assertions.",
+    "The safe in-place writer first compacts excess bytes of shrinking replacements and updates planned coordinates. A reverse pass then expands gaps and writes owned fragments. Its intermediate length never exceeds the larger of original and final lengths, preserving allocation and capacity whenever final output fits. Equal-anchor insertion order is preserved.",
+    "No full XML clone or second full output buffer is used by the owned path. Existing planned replacement and cloned-series fragments remain owned. Only patch.rs and the new integration test source were changed within the workspace.",
+    "Tests compare owned output with the existing borrowed API, exercise every ChartEdit variant and 100 generated mixed-replacement combinations, and assert pointer/capacity preservation and recoverability."
+  ],
+  "limitations": [
+    "Validation is a component-level check in the supplied minimal workspace; no upstream application integration, full document engine or visual rendering validation was performed.",
+    "Allocation failure retains the standard Vec behavior rather than becoming a recoverable validation error. No allocator instrumentation or performance benchmark was run.",
+    "The caller must still supply scanner data for the same XML; range validation cannot prove semantic correspondence of arbitrary otherwise in-bounds coordinates."
+  ]
+}

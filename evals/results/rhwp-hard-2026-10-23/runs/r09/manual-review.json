@@ -1,0 +1,32 @@
+{
+  "reviewer": "Primary agent, non-blinded source review",
+  "criteria": [
+    {
+      "criterion": "The writer reuses the existing planner and does not materialize or clone the whole input/output XML; existing planned fragments are allowed.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "for chunk in planned.chunks() {",
+      "rationale": "Both legacy and streaming paths use ValidatedSplices; only the legacy path collects output, while the writer traverses source slices and planned fragments."
+    },
+    {
+      "criterion": "All validation completes before writing, and I/O handling preserves typed causes without explicit flush or panic recovery.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "ValidatedSplices::new(xml, planner.splices)",
+      "rationale": "The constructor validates all spans and overlap before any write_all call. I/O errors are retained directly, with no flush or panic recovery."
+    },
+    {
+      "criterion": "Public documentation distinguishes validation atomicity from a possible written prefix on I/O failure.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "I/O error and may leave a prefix of the result; there is no rollback.",
+      "rationale": "Public API documentation explicitly explains pre-write validation and partial output on I/O failure."
+    }
+  ],
+  "scope_pass": true,
+  "scope_rationale": "Only patch.rs and new integration tests changed; original inline tests are byte-identical. Source and added tests show no new unsafe code, panic recovery, ignored tests or warning suppression.",
+  "sensitivity_expected": true,
+  "sensitivity_quote": "error[E0432]: unresolved import `rhwp_ooxml_chart::patch::WritePatchError`",
+  "sensitivity_rationale": "Pristine source does not export the requested API/error. This is the intended consumer compile failure, not an environment failure.",
+  "observations": "All automated checks pass. Original planner consistency checks remain present, and external consumers preserve legacy API compatibility."
+}

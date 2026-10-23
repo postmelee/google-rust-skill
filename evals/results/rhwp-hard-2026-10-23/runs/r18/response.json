@@ -1,0 +1,49 @@
+{
+  "summary": "Implemented apply_chart_edits_owned and OwnedPatchError in patch.rs, reusing the existing planner and adding six integration tests. Final checks passed: build, 165 existing unit tests, six new integration tests, Clippy with warnings denied, and formatting.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs"
+  ],
+  "commands": [
+    {
+      "command": "rg --files crates/rhwp-ooxml-chart/tests",
+      "outcome": "Exit 2 during initial inspection: the tests directory did not exist yet; created it for the new integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "outcome": "Passed after implementation and again after correcting the malformed-range test construction."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Passed, exit 0."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Passed twice, including after the test-only Clippy correction: 165 unit tests and six integration tests; zero failures. Zero documentation tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "outcome": "First run failed, exit 101: reversed_empty_ranges on the intentionally malformed 5..3 test fixture. Replaced the literal with an explicit Range { start: 5, end: 3 } construction, preserving the test. Second run passed, exit 0; no lint suppression."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "outcome": "Passed before and after the test correction, exit 0."
+    }
+  ],
+  "design_decisions": [
+    "The owned API borrows the input only while the common planner builds owned replacement fragments. It validates all planned spans, overlaps, and final length before reserving or mutating the input. Failure moves the untouched vector into OwnedPatchError, with no borrowed state.",
+    "Owned execution first compacts unchanged bytes leftward, storing fragment anchors in the existing plan, then writes unchanged gaps and replacement fragments backward into the final length. No input clone or full output scratch buffer is created. Capacity is reserved only for the final output length, so mixed growth and shrinkage cannot trigger unnecessary allocation.",
+    "OwnedPatchError implements Debug, Display, and Error, provides error and into_parts, and returns the underlying PatchError from source. PatchError receives an additive Error implementation; its variants and existing public data structures and function signatures remain unchanged.",
+    "Both APIs share planning and span validation. Malformed clone-template ranges and empty scanner data now produce existing typed errors instead of indexing panics. Coalesced structural deletions and insertion anchors validate their original component ranges before use.",
+    "Tests compare owned output against the borrowed API for every ChartEdit variant, structural combinations and insertion ordering. Pointer and capacity assertions cover final-size-fit cases; a 625-case mixed-length sweep exercises opposite displacement directions. Recovery tests verify original bytes, allocation, capacity, typed source, and independence from borrowed input lifetimes."
+  ],
+  "limitations": [
+    "This is an isolated component implementation; no full document-engine or rendered-chart validation was performed.",
+    "Allocator exhaustion follows standard Vec behavior and is not converted into a new PatchError variant. No allocation-failure injection or performance benchmark was run.",
+    "As with the existing borrowed API, scanner data must describe the same XML. Bounds and overlap validation do not prove the semantic authenticity of arbitrary in-bounds scanner metadata.",
+    "No skill/SKILL.md was present in this packet."
+  ]
+}

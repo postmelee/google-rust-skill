@@ -1,0 +1,32 @@
+{
+  "reviewer": "Primary agent, non-blinded source review",
+  "criteria": [
+    {
+      "criterion": "The owned path reuses the existing planner without cloning the whole input or constructing a second full output buffer; existing planned fragments are allowed.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "xml.copy_within(read..p.span.start, write);",
+      "rationale": "The shared planner creates fragments. The owned path compacts retained bytes, then expands backward in the original vector without a second full output."
+    },
+    {
+      "criterion": "The original vector is owned by the returned error, with validation completed before mutation and no borrowed lifetime required for recovery.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "Err(error) => Err(OwnedPatchError { xml, error }),",
+      "rationale": "Validation finishes before mutation, and OwnedPatchError owns the vector and typed cause with no borrowed lifetime."
+    },
+    {
+      "criterion": "Existing APIs, enum variants and struct construction remain compatible; no new unsafe code or suppressed checks are used.",
+      "pass": true,
+      "file": "patch.diff",
+      "quote": "if idx_span.start != template.element_span.start + fidx.start",
+      "rationale": "Existing public APIs remain compatible. Original width assertions are strengthened into explicit coordinate-consistency rejection, preserving the checked invariant without new unsafe or suppressed checks."
+    }
+  ],
+  "scope_pass": true,
+  "scope_rationale": "Only patch.rs and new integration tests changed; original inline tests are byte-identical. Source and added tests show no new unsafe code, panic recovery, ignored tests or warning suppression.",
+  "sensitivity_expected": true,
+  "sensitivity_quote": "error[E0432]: unresolved imports `rhwp_ooxml_chart::patch::apply_chart_edits_owned`, `rhwp_ooxml_chart::patch::OwnedPatchError`",
+  "sensitivity_rationale": "Pristine source does not export the requested API/error. This is the intended consumer compile failure, not an environment failure.",
+  "observations": "All automated checks pass, including 165 unchanged original tests and 13 added tests. Test quantity is not an additional scoring dimension."
+}

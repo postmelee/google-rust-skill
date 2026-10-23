@@ -1,0 +1,66 @@
+{
+  "summary": "Implemented patch::apply_chart_edits_owned and OwnedPatchError, with recoverable validation failures and allocation-preserving in-place editing. Added nine integration tests. Final build, tests, Clippy, and formatting checks pass.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "workspace/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "outcome": "Passed; formatted the implementation and new integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Passed, exit 0."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Passed, exit 0: 165 existing unit tests and 8 new integration tests; 0 doc tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "outcome": "Failed, exit 101: reversed_empty_ranges on the deliberately malformed 9..8 test range. Replaced this syntax with an explicit Range struct value; did not suppress the warning."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "outcome": "Passed, exit 0, before the final test correction and additional malformed-metadata checks."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "outcome": "Passed after test correction and addition of the ninth integration test."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Final run passed, exit 0."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Final run passed, exit 0: 165 existing unit tests, 9 new integration tests, 0 failures; 0 doc tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "outcome": "Final run passed, exit 0."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "outcome": "Final run passed, exit 0."
+    }
+  ],
+  "design_decisions": [
+    "Both public editing APIs use the existing Planner through a shared internal plan_chart_edits helper. Validation checks ranges, stable splice ordering, overlaps, and representable final length before mutation.",
+    "The owned applicator compacts unchanged byte ranges forward, then inserts already-owned replacement fragments while copying retained ranges backward. It creates neither a full XML clone nor a second output buffer, and never needs transient capacity beyond the larger of original and final length.",
+    "OwnedPatchError privately owns the original Vec and PatchError, exposes error() and into_parts(), implements Debug and Display, and returns the typed PatchError from Error::source. PatchError gains the additive Error implementation. No error borrows the edits or scanner data.",
+    "Existing public signatures, enum variants, and public struct fields remain unchanged. Existing inline tests and configuration are preserved. Added guards replace unchecked template slicing, empty-series underflow, and debug-only metadata assumptions with existing typed errors. Invalid merged deletion spans and overlapping clone metadata are rejected.",
+    "Tests compare byte output for all edit variants, multiple same-anchor insertions, Unicode text, 125 combinations of replacement lengths with and without spare capacity, structural growth funded by deletion, recoverable error identity, detached error lifetimes, and malformed scanner ranges."
+  ],
+  "limitations": [
+    "Validation was limited to the isolated chart crate and supplied toolchain; no full document-engine integration or visual rendering validation was performed.",
+    "Allocation preservation is tested using the returned vector pointer and capacity; no allocator instrumentation or performance benchmark was performed.",
+    "Allocation exhaustion retains normal Vec behavior; the existing PatchError variants provide no allocation-failure variant. Recoverable errors cover edit planning and validation."
+  ]
+}

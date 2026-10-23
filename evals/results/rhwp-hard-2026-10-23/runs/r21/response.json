@@ -1,0 +1,96 @@
+{
+  "summary": "Implemented patch::apply_chart_edits_owned and OwnedPatchError in patch.rs, with 13 integration tests covering output parity, allocation/capacity preservation, recovery, structural edits, malformed ranges, and error lifetime/source behavior. All final required checks passed.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/rustguide.md",
+    "workspace/Cargo.toml",
+    "workspace/rust-toolchain.toml",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": ".",
+      "exit_code": 1,
+      "outcome": "Failed: invoked at packet root, which has no Cargo.toml. Subsequent Cargo commands ran in workspace/."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "cwd": "workspace",
+      "exit_code": 0,
+      "outcome": "Formatted implementation and integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "exit_code": 0,
+      "outcome": "Initial implementation built successfully."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "exit_code": 0,
+      "outcome": "Initial run: 165 existing tests and 10 new integration tests passed; 0 doc tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "exit_code": 101,
+      "outcome": "Failed on three intentionally reversed range literals in new tests (reversed_empty_ranges). Replaced them with explicit Range struct values to represent malformed input; no lint suppression was added."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "exit_code": 0,
+      "outcome": "Initial formatting check passed."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "cwd": "workspace",
+      "exit_code": 0,
+      "outcome": "Formatted the lint correction and added malformed-deletion, boundary-insertion, and overflow checks."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "exit_code": 0,
+      "outcome": "Final implementation built successfully."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "exit_code": 0,
+      "outcome": "Final run: all 165 existing tests and 13 new integration tests passed; 0 doc tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "exit_code": 0,
+      "outcome": "Final Clippy check passed with warnings denied."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "exit_code": 0,
+      "outcome": "Final formatting check passed."
+    }
+  ],
+  "design_decisions": [
+    "Shared the existing Planner and splice validation between borrowed and owned APIs. All fallible planning, ordering, bounds, overlap, and final-size checks complete before the owned input is mutated.",
+    "The owned path first compacts unchanged input bytes in place while recording compacted insertion offsets, then expands backward to insert owned replacement fragments. No full input clone or second full output buffer is created. Only the final output length can require vector growth, so mixed growing/shrinking edits preserve allocation and capacity whenever the final result fits.",
+    "OwnedPatchError privately owns both the original Vec<u8> and PatchError. error() borrows the typed error; into_parts() returns the original vector and error. Display delegates to PatchError, Debug is derived, and Error::source exposes the concrete PatchError. PatchError receives an additive Error implementation.",
+    "Kept existing public signatures, struct fields, enum shapes, variants, and inline tests unchanged. Did not add non_exhaustive attributes because the explicit downstream compatibility requirement takes precedence over general style guidance.",
+    "Hardened planner paths that previously could panic or hide malformed data: empty clone templates, template slicing and idx/order ranges, collapsed tail-deletion ranges, insertion-anchor ranges, and overflow in requested final row counts. These use existing error variants.",
+    "Used standard Rust integration tests for this conventional Cargo library, retained the pinned toolchain/dependencies, and added no unsafe code, panic recovery, warning suppression, or configuration changes."
+  ],
+  "limitations": [
+    "Validation is limited to the isolated chart crate and synthetic integration fixtures; no full document-engine, visual, or upstream corpus validation was performed.",
+    "Pointer/capacity assertions and code inspection verify the requested reuse behavior for the tested cases. No allocator instrumentation or performance benchmarks were run, and no performance measurements are claimed.",
+    "Recovery covers typed validation failures. Allocation failure follows the existing Vec/allocator behavior and is not represented by a new error variant."
+  ]
+}

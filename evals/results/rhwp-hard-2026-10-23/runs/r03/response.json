@@ -1,0 +1,60 @@
+{
+  "summary": "Implemented apply_chart_edits_owned with allocation reuse, recoverable owned validation errors, shared planning and validation, and seven integration tests. Final build, 172 tests, Clippy, and formatting checks passed.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/api-design.md",
+    "skill/references/ownership-errors.md",
+    "skill/references/safety-docs.md",
+    "workspace/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all --manifest-path workspace/Cargo.toml",
+      "cwd": ".",
+      "outcome": "Passed; formatted initial implementation and integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed initially and after final changes."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Initial run passed 165 existing unit tests and 6 integration tests. Final run passed 165 existing unit tests and 7 integration tests; 0 failures, 0 ignored; 0 doctests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "outcome": "Initial run failed with reversed_empty_ranges on the intentional malformed range literal in the new test. Replaced the literal with Range { start: 5, end: 4 }, without lint suppression. Final run passed."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "cwd": "workspace",
+      "outcome": "Passed twice while formatting subsequent changes."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "outcome": "Passed initially and after final changes."
+    }
+  ],
+  "design_decisions": [
+    "The owned API consumes Vec<u8>; OwnedPatchError privately owns that same vector and a PatchError, exposes error() and into_parts(), delegates Display, derives Debug, and supplies the typed PatchError as Error::source. No borrowed data escapes.",
+    "Both APIs reuse the existing Planner and the same sorted splice validation. All fallible validation finishes before any original-byte mutation. Validation errors therefore preserve bytes, length, capacity, and pointer without copying the complete input.",
+    "The owned writer first compacts unchanged source runs in place, truncates to the retained length, resizes once to the final length, and expands backwards with copy_within and planned replacement fragments. This avoids transient capacity requirements from opposing growth and shrinkage, while preserving same-offset insertion ordering.",
+    "Existing public enum variants, struct construction, signatures, and byte output remain compatible. PatchError gains the standard Error implementation. Malformed structural coordinates and empty clone templates now return existing typed errors instead of unchecked slicing, underflow, or debug assertions.",
+    "Tests compare borrowed and owned output for every edit variant; check pointers and capacities for spare capacity and exact-capacity mixed changes; cover allowed growth, empty edits, coincident insertions, malformed ranges and overlapping edits, error sources, and recovery after data and edits are dropped.",
+    "Only patch.rs and the new tests/owned_patch.rs were edited under workspace; dependencies, configuration, and existing inline tests were preserved."
+  ],
+  "limitations": [
+    "Verification is limited to the supplied chart crate and Rust 1.93.1; no full document engine or visual validation was performed.",
+    "No benchmark or allocation-profiler measurements were taken. Allocation retention was checked through vector pointers and capacities in integration tests and the safe in-place algorithm was inspected.",
+    "Allocation exhaustion uses standard Vec behavior; OwnedPatchError represents validation rejection, not allocator failure. As with the existing API, scanner data must describe the same XML bytes."
+  ]
+}

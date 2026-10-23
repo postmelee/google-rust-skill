@@ -7,6 +7,9 @@ verified against [the manifest](../../provenance/rhwp-chart.json). The minimal
 workspace preserves all six crate files, 165 original tests, Rust 1.93.1, and the
 three packages' upstream dependency versions and checksums.
 
+See the [recorded 24-run comparison](../results/rhwp-hard-2026-10-23/REPORT.md)
+for results, per-run evidence, manual judgments, and interpretation limits.
+
 ## Tasks
 
 | Case | Requested outcome | Coupled decisions |

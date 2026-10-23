@@ -120,6 +120,18 @@ The [recorded comparison](evals/results/rhwp-2026-10-23/REPORT.md) passed all th
 tasks in each of the four conditions (12 runs): a tie, with no measured skill
 advantage. Patches, logs, frozen criteria, and a replay command are included.
 
+A [repeated chart evaluation](evals/integration-hard/README.md) adds two harder
+tasks combining ownership, recoverable errors, and API compatibility in the
+complete `rhwp-ooxml-chart` crate. It runs three fresh sessions per task and
+condition (24 total), with frozen external tests and source-review criteria.
+The [report and all run artifacts](evals/results/rhwp-hard-2026-10-23/REPORT.md)
+separate executable results from manual judgments and explain the limits of
+this small development comparison.
+All 24 final implementations passed automated checks. Source review marked one
+candidate run and one 0xMassi run as failures for removing existing consistency
+checks; full counts were 5/6 for each, versus 6/6 for StudentWeis and no added
+skill. These reviewer-dependent differences do not establish a general ranking.
+
 ## Develop and verify
 
 Use Python 3.10+ and Rust 1.94.1 for the recorded fixture checks:
@@ -170,7 +182,8 @@ normal code task or claim a pinned release is always current.
 No GitHub repository is created or published by the maintenance scripts.
 The included GitHub Actions workflow runs structural checks, source verification,
 fixture compilation, tooling tests, archived-result integrity checks, packaging,
-and a separate replay of the 12 archived rhwp patches. Fresh model evaluations
+and separate replays of the 12 initial rhwp patches and 24 chart patches. These
+replays verify recorded code, including failed runs; fresh model evaluations
 are run separately.
 
 ## License and acknowledgements

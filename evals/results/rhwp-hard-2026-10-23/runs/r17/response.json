@@ -1,0 +1,64 @@
+{
+  "summary": "Added patch::write_chart_edits<W: Write + ?Sized> for borrowed concrete and trait-object writers. Planning and complete bounds/overlap validation precede all output; validated unchanged XML slices and replacement fragments are written directly using write_all. Added typed WritePatchError error chaining and five integration tests.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/api-design.md",
+    "skill/references/ownership-errors.md",
+    "skill/references/organization.md",
+    "skill/references/safety-docs.md",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs",
+    "workspace/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml",
+    "workspace/rust-toolchain.toml"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "cwd": ".",
+      "outcome": "Failed (exit 1): invoked from packet root, which has no Cargo.toml; no source changes from this invocation."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "cwd": "workspace",
+      "outcome": "Passed (exit 0)."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed (exit 0)."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed (exit 0): 165 existing unit tests, 5 new integration tests, 0 doctests; no failed or ignored tests."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "outcome": "Passed (exit 0)."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "outcome": "Passed (exit 0)."
+    }
+  ],
+  "design_decisions": [
+    "The XML, scan data, edits, and writer remain borrowed. The existing planner owns only its established replacement/structural fragments. The new writing path does not call the full-document buffered API or clone the XML.",
+    "Both public chart-edit APIs use plan_chart_edits and validate_splices. Bounds are checked in planning order before sorting; overlap validation retains the existing (start, end, seq) order, including insertion ordering.",
+    "write_all supplies standard short-write, Interrupted, and WriteZero behavior. The first non-interruption I/O error is returned unchanged, with its original custom payload. Neither flush nor close is called.",
+    "WritePatchError wraps PatchError and io::Error directly and exposes each typed cause through Error::source. PatchError gained an additive Error implementation. Existing public signatures, enum variants, exhaustive matching, and struct construction remain unchanged; the new two-variant error is separate.",
+    "Documentation distinguishes validation atomicity from I/O failure: validation touches no writer methods, while I/O failures may leave a prefix with no rollback guarantee.",
+    "Template cloning now checks an empty series list and obtains its borrowed template slice with get, returning existing error variants for an absent template or invalid template range instead of indexing those cases.",
+    "Integration tests compare every ChartEdit variant against buffered output, cover mixed operations, insertion order, byte identity, late invalid/reversed/overlapping spans, structural spans, planner finish failures, trait-object sinks, interruptions, short writes, WriteZero, prefix failures, no flushing, continued caller ownership, and typed payload identity."
+  ],
+  "limitations": [
+    "Validation was limited to the isolated component workspace on the supplied Rust 1.93.1 toolchain. No full document-engine or visual validation was performed.",
+    "No memory-allocation benchmark or timing benchmark was performed. Absence of a full-document output buffer in the new path was checked by code inspection.",
+    "As documented by both APIs, ChartData must describe the same XML bytes. Existing replacement and structural fragment allocations remain allowed and unchanged in purpose."
+  ]
+}

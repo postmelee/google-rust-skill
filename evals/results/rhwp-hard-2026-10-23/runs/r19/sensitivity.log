@@ -1,0 +1,23 @@
+   Compiling rhwp-ooxml-chart v0.1.0 (<workspace>/crates/rhwp-ooxml-chart)
+error[E0432]: unresolved imports `rhwp_ooxml_chart::patch::write_chart_edits`, `rhwp_ooxml_chart::patch::WritePatchError`
+ --> crates/rhwp-ooxml-chart/tests/write_edits.rs:3:24
+  |
+3 |     apply_chart_edits, write_chart_edits, ChartEdit, EditTarget, PatchError, ValueEdit,
+  |                        ^^^^^^^^^^^^^^^^^ no `write_chart_edits` in `patch`
+4 |     WritePatchError,
+  |     ^^^^^^^^^^^^^^^ no `WritePatchError` in `patch`
+  |
+help: a similar name exists in the module
+  |
+3 -     apply_chart_edits, write_chart_edits, ChartEdit, EditTarget, PatchError, ValueEdit,
+3 +     apply_chart_edits, apply_chart_edits, ChartEdit, EditTarget, PatchError, ValueEdit,
+  |
+help: a similar name exists in the module
+  |
+4 -     WritePatchError,
+4 +     PatchError,
+  |
+
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `rhwp-ooxml-chart` (test "write_edits") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

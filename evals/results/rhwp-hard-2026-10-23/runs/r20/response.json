@@ -1,0 +1,61 @@
+{
+  "summary": "Added write_chart_edits<W: Write + ?Sized> and WritePatchError. Both APIs reuse the existing planner and shared pre-output span validation; streaming writes borrowed unchanged XML slices and owned planned fragments without building the whole output. Added six integration tests.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all --manifest-path workspace/Cargo.toml",
+      "cwd": ".",
+      "outcome": "Passed; formatted implementation and new tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Initial run failed: 165 existing tests passed; 5 of 6 integration tests passed. The payload identity test constructed an io::Error containing Box<Payload>, then incorrectly attempted to downcast directly to Payload. Corrected the test setup by coercing the box to Box<dyn Error + Send + Sync> before constructing io::Error."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "cwd": "workspace",
+      "outcome": "Passed after correcting the test setup."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed: 165 existing unit tests, 6 new integration tests; 0 doctests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "outcome": "Passed."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "outcome": "Passed."
+    }
+  ],
+  "design_decisions": [
+    "The caller retains ownership of xml, ChartData, edits and writer. The writer bound accepts unsized trait objects. Only replacement bytes and structural fragments are owned by the planner.",
+    "A shared planning helper runs add and finish for both output APIs. A shared validation helper checks every bound before sorting, then every overlap before output starts; it retains the previous sorting and error precedence.",
+    "The streaming path uses write_all for each borrowed original slice and planned replacement. This preserves short-write, Interrupted and WriteZero handling and never flushes or closes the writer.",
+    "WritePatchError owns either the unchanged PatchError or original io::Error. Display adds context; Error::source exposes the original typed cause. PatchError gained an additive Error implementation without changing variants, public structs or prior function signatures.",
+    "Invalid template ranges now use checked slice access; empty templates and inconsistent clone metadata return existing errors rather than arithmetic/indexing panics. Existing inline tests were preserved.",
+    "Tests cover every edit variant, mixed point/series edits, insertion ordering, byte preservation, borrowed trait-object writers, late range and overlap validation, custom error payload identity, prefix failures, short writes, Interrupted, WriteZero and no flush."
+  ],
+  "limitations": [
+    "I/O failure may leave an output prefix and offers no rollback. Validation failures leave the writer untouched.",
+    "This is an isolated component check with synthetic chart fixtures, not full document-engine or visual validation.",
+    "No allocation benchmark was run. The no-whole-output-buffer property is supported by inspection of the direct slice-writing path; structural replacement fragments still allocate as allowed.",
+    "No skill/SKILL.md was present in this packet."
+  ]
+}

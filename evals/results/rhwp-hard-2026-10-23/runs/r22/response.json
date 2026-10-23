@@ -1,0 +1,56 @@
+{
+  "summary": "Added write_chart_edits<W: std::io::Write + ?Sized> with complete pre-write validation, direct borrowed-chunk output, typed error sources, and six integration tests. All required checks pass.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "manifest.json",
+    "workspace/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "outcome": "Passed twice; formatted implementation and integration tests. Hash verification confirms other supplied sources and configuration were unchanged."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Passed twice, including after clone-template bounds hardening."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Passed twice. First run: 165 existing tests and 5 new integration tests; final run: 165 existing tests and 6 new integration tests. No failures or ignored tests; zero doctests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "outcome": "Passed twice with no warnings."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "outcome": "Passed twice."
+    },
+    {
+      "command": "Python hashlib.sha256 comparison of every supplied file against manifest.json",
+      "outcome": "Passed: only workspace/crates/rhwp-ooxml-chart/src/patch.rs differs from the supplied manifest. New integration tests are in the allowed tests directory."
+    }
+  ],
+  "design_decisions": [
+    "Both public edit paths use plan_chart_edits and validate_splices. Validation checks every range, preserves the original sorting key and error ordering, and checks all overlaps before any writer call. Shared splice_chunks yields the same ordered bytes to the buffered and streaming paths.",
+    "The writer is borrowed with W: io::Write + ?Sized, supporting trait objects. Unchanged chunks borrow the input XML and replacement chunks borrow planner-owned vectors. No complete input or output XML buffer is allocated to feed the streaming writer; existing structural-fragment allocation remains.",
+    "write_all provides short-write, Interrupted, and WriteZero behavior. A terminal I/O error immediately stops output and is retained intact, including custom payloads. The caller retains ownership and responsibility for flushing or closing the writer.",
+    "WritePatchError has Patch and Io variants and implements Debug, Display, and Error. Error::source returns the original typed error; PatchError receives an additive Error implementation. The new enum is non-exhaustive; all existing enum variants, struct fields, signatures, and exhaustive matching remain unchanged.",
+    "Public documentation distinguishes untouched output after validation failure from a possible written prefix after I/O failure. No rollback is promised once writing begins.",
+    "Clone-template access now uses checked ranges and checked subtraction before reading a fragment. Invalid template coordinates return existing patch errors instead of indexing or arithmetic panics. Redundant debug-only width assertions were removed because fresh fragment scanning supplies the actual coordinates.",
+    "Integration tests exercise every edit variant, ordering of same-anchor series insertions, combined value and structural edits, exact unchanged-byte preservation, trait-object writers, short writes and interruptions, late invalid/reversed/overlapping spans, invalid clone-template spans, preserved custom I/O payloads, and WriteZero. Existing inline tests were preserved.",
+    "Applied the supplied Rust style guidance within the explicit compatibility and file restrictions; did not alter fixed configuration, dependencies, or pre-existing API shapes."
+  ],
+  "limitations": [
+    "Validation uses the existing edit planner and requires ChartData scanned from the same input XML; it does not establish provenance of arbitrary caller-constructed in-bounds coordinates.",
+    "Verification covers the isolated component and cached Rust 1.93.1 toolchain. No full document engine, upstream integration, or visual rendering validation was performed.",
+    "The no-complete-output-buffer property was verified through implementation structure, not allocation instrumentation or benchmark measurements.",
+    "No build, test, Clippy, or formatting failures occurred during this session."
+  ]
+}

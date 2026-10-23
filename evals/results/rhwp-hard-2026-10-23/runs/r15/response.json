@@ -1,0 +1,72 @@
+{
+  "summary": "Implemented patch::write_chart_edits with a borrowed Write + ?Sized sink, complete preflight validation, direct borrowed byte emission, and typed validation/I/O errors. Added six integration tests covering all edit kinds and writer failure behavior.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/rustguide.md",
+    "workspace/Cargo.toml",
+    "workspace/rust-toolchain.toml",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all --manifest-path workspace/Cargo.toml",
+      "cwd": ".",
+      "outcome": "Passed; formatted the implementation and new integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Initial run failed: all 165 existing tests and 5 of 6 new integration tests passed; the payload test constructed a boxed concrete payload but attempted to downcast to the unboxed type. Corrected the test fixture to construct io::Error::other(Payload(42)) and capture the contained payload address."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "outcome": "Initial run passed."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "cwd": "workspace",
+      "outcome": "Passed after correcting the test fixture."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Final run passed: 165 existing unit tests, 6 new integration tests, and 0 doctests; no ignored tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "outcome": "Final run passed."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "outcome": "Passed."
+    }
+  ],
+  "design_decisions": [
+    "The writer is borrowed as &mut W with W: Write + ?Sized, supporting both concrete writers and trait objects without taking ownership, flushing, or closing.",
+    "Both output APIs use the existing Planner through a shared planning function, a shared sorting and full-span-validation helper, and a shared iterator of borrowed unchanged input and replacement slices. The streaming path does not create a complete input or output copy.",
+    "Bounds checks retain their original ordering before overlap checks. All planning, structural finalization, and span validation finish before any call to the external writer. Same-offset insertion ordering remains (start, end, seq).",
+    "Write::write_all preserves short-write, Interrupted, and WriteZero behavior. Errors are moved intact into WritePatchError::Io, and Error::source exposes the original std::io::Error including its custom payload. PatchError now implements Error so validation causes are also downcastable.",
+    "Existing public signatures, enum variants, exhaustive matching, and public struct construction remain unchanged. WritePatchError has the two fixed failure categories requested by the task; existing enums and structs were not marked non_exhaustive.",
+    "Malformed cloning template spans and empty template data are rejected with existing PatchError variants rather than indexing or subtraction panics. Valid template fragment allocation remains the existing planner behavior.",
+    "Documentation distinguishes validation atomicity from partial output after I/O failure. Integration tests compare every edit kind against buffered bytes, exercise late invalid and overlapping spans, test no writes or flushes on rejection, retain I/O payload identity, and verify direct borrowing for unchanged XML."
+  ],
+  "limitations": [
+    "This was an isolated chart-component implementation; no full document engine or visual rendering validation was performed.",
+    "No allocation counts or performance benchmarks were measured. Direct input borrowing is tested for the no-edit case, and the streaming implementation was inspected for complete XML buffer allocation.",
+    "As with the existing API, ChartData must describe the same XML input. In-range coordinates alone cannot establish that provenance.",
+    "I/O failure may leave a prefix; no rollback guarantee is offered."
+  ]
+}

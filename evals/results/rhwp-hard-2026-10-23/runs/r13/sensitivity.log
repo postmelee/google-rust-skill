@@ -1,0 +1,30 @@
+   Compiling rhwp-ooxml-chart v0.1.0 (<workspace>/crates/rhwp-ooxml-chart)
+error[E0432]: unresolved imports `rhwp_ooxml_chart::patch::apply_chart_edits_owned`, `rhwp_ooxml_chart::patch::OwnedPatchError`
+ --> crates/rhwp-ooxml-chart/tests/owned_patch.rs:3:24
+  |
+3 |     apply_chart_edits, apply_chart_edits_owned, ChartEdit, EditTarget, OwnedPatchError, PatchError,
+  |                        ^^^^^^^^^^^^^^^^^^^^^^^                         ^^^^^^^^^^^^^^^ no `OwnedPatchError` in `patch`
+  |                        |
+  |                        no `apply_chart_edits_owned` in `patch`
+  |
+help: a similar name exists in the module
+  |
+3 -     apply_chart_edits, apply_chart_edits_owned, ChartEdit, EditTarget, OwnedPatchError, PatchError,
+3 +     apply_chart_edits, apply_chart_edits, ChartEdit, EditTarget, OwnedPatchError, PatchError,
+  |
+help: a similar name exists in the module
+  |
+3 -     apply_chart_edits, apply_chart_edits_owned, ChartEdit, EditTarget, OwnedPatchError, PatchError,
+3 +     apply_chart_edits, apply_chart_edits_owned, ChartEdit, EditTarget, PatchError, PatchError,
+  |
+
+error[E0282]: type annotations needed
+   --> crates/rhwp-ooxml-chart/tests/owned_patch.rs:203:16
+    |
+203 |     assert_eq!(original.as_ptr(), pointer);
+    |                ^^^^^^^^ cannot infer type
+
+Some errors have detailed explanations: E0282, E0432.
+For more information about an error, try `rustc --explain E0282`.
+error: could not compile `rhwp-ooxml-chart` (test "owned_patch") due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...

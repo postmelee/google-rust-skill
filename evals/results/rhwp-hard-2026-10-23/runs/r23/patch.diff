@@ -1,0 +1,583 @@
+--- a/crates/rhwp-ooxml-chart/src/patch.rs
++++ b/crates/rhwp-ooxml-chart/src/patch.rs
+@@ -253,6 +253,39 @@
+                 )
+             }
+         }
++    }
++}
++
++impl std::error::Error for PatchError {}
++
++/// A rejected owned patch, retaining the untouched input allocation for retry.
++#[derive(Debug)]
++pub struct OwnedPatchError {
++    xml: Vec<u8>,
++    error: PatchError,
++}
++
++impl OwnedPatchError {
++    /// Returns the typed reason the patch was rejected.
++    pub fn error(&self) -> &PatchError {
++        &self.error
++    }
++
++    /// Recovers the original bytes and the rejection reason.
++    pub fn into_parts(self) -> (Vec<u8>, PatchError) {
++        (self.xml, self.error)
++    }
++}
++
++impl std::fmt::Display for OwnedPatchError {
++    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
++        self.error.fmt(f)
++    }
++}
++
++impl std::error::Error for OwnedPatchError {
++    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
++        Some(&self.error)
+     }
+ }
+ 
+@@ -342,25 +375,72 @@
+ /// 정렬 키는 `(start, end, seq)` — 같은 위치의 길이 0 삽입은 계획 순서를 지키고, 삽입은
+ /// 같은 위치에서 시작하는 치환·삭제보다 앞에 놓인다.
+ fn splice(xml: &[u8], mut planned: Vec<Splice>) -> Result<Vec<u8>, PatchError> {
++    let final_len = validate_splices(xml.len(), &mut planned)?;
++    let mut out = Vec::with_capacity(final_len);
++    let mut cursor = 0;
+     for p in &planned {
+-        if p.span.start > p.span.end || p.span.end > xml.len() {
+-            return Err(p.addr.out_of_range());
+-        }
+-    }
+-    planned.sort_by_key(|p| (p.span.start, p.span.end, p.seq));
+-
+-    let mut out = Vec::with_capacity(xml.len());
+-    let mut cursor = 0usize;
+-    for p in &planned {
+-        if p.span.start < cursor {
+-            return Err(p.addr.overlap());
+-        }
+         out.extend_from_slice(&xml[cursor..p.span.start]);
+         out.extend_from_slice(&p.bytes);
+         cursor = p.span.end;
+     }
+     out.extend_from_slice(&xml[cursor..]);
+     Ok(out)
++}
++
++/// Validate the entire plan before any caller-owned bytes or capacity change.
++fn validate_splices(xml_len: usize, planned: &mut [Splice]) -> Result<usize, PatchError> {
++    for p in planned.iter() {
++        if p.span.start > p.span.end || p.span.end > xml_len {
++            return Err(p.addr.out_of_range());
++        }
++    }
++    planned.sort_by_key(|p| (p.span.start, p.span.end, p.seq));
++    let mut cursor = 0;
++    let mut retained = xml_len;
++    for p in planned.iter() {
++        if p.span.start < cursor {
++            return Err(p.addr.overlap());
++        }
++        retained -= p.span.len();
++        cursor = p.span.end;
++    }
++    for p in planned.iter() {
++        retained = retained
++            .checked_add(p.bytes.len())
++            .filter(|&len| len <= isize::MAX as usize)
++            .ok_or_else(|| p.addr.out_of_range())?;
++    }
++    Ok(retained)
++}
++
++/// Compact retained bytes to the left, then expand fragments from the right.
++/// The intermediate length never exceeds max(original length, final length),
++/// even when growing edits precede shrinking edits or share an insertion anchor.
++fn splice_owned(mut xml: Vec<u8>, mut planned: Vec<Splice>, final_len: usize) -> Vec<u8> {
++    let mut read = 0;
++    let mut write = 0;
++    for p in &mut planned {
++        let gap = p.span.start - read;
++        xml.copy_within(read..p.span.start, write);
++        write += gap;
++        read = p.span.end;
++        p.span = write..write;
++    }
++    let tail = xml.len() - read;
++    xml.copy_within(read.., write);
++    let mut source_end = write + tail;
++    xml.truncate(source_end);
++    xml.resize(final_len, 0);
++    let mut destination_end = final_len;
++    for p in planned.iter().rev() {
++        let gap = source_end - p.span.start;
++        destination_end -= gap;
++        xml.copy_within(p.span.start..source_end, destination_end);
++        destination_end -= p.bytes.len();
++        xml[destination_end..destination_end + p.bytes.len()].copy_from_slice(&p.bytes);
++        source_end = p.span.start;
++    }
++    xml
+ }
+ 
+ /// 편집 목록을 splice 목록으로 푼다.
+@@ -404,6 +484,24 @@
+             seq,
+             addr,
+         });
++    }
++
++    fn validate_structure_spans<'b>(
++        &self,
++        spans: impl IntoIterator<Item = &'b Range<usize>>,
++        series: usize,
++    ) -> Result<(), PatchError> {
++        let mut end = 0;
++        for span in spans {
++            if span.start > span.end || span.end > self.xml.len() {
++                return Err(PatchError::StructureSpanOutOfRange { series });
++            }
++            if span.start < end {
++                return Err(PatchError::OverlappingStructureEdits { series });
++            }
++            end = span.end;
++        }
++        Ok(())
+     }
+ 
+     fn series(&self, series: usize) -> Result<&'a ChartSeries, PatchError> {
+@@ -610,6 +708,12 @@
+         ) else {
+             return Err(PatchError::BlockNotResizable { series, target });
+         };
++        self.validate_structure_spans(
++            points[keep..]
++                .iter()
++                .filter_map(|point| point.element_span.as_ref()),
++            series,
++        )?;
+         self.push(
+             first.start..last.end,
+             Vec::new(),
+@@ -633,6 +737,12 @@
+         {
+             return Err(PatchError::OverlappingStructureEdits { series: keep });
+         }
++        self.validate_structure_spans(
++            self.data.series[keep..]
++                .iter()
++                .map(|series| &series.element_span),
++            keep,
++        )?;
+         self.truncated_series = true;
+         let first = self.data.series[keep].element_span.start;
+         let last = self.data.series[len - 1].element_span.end;
+@@ -708,7 +818,9 @@
+         strip_style: bool,
+     ) -> Result<Vec<u8>, PatchError> {
+         let len = self.data.series.len();
+-        let template_index = len - 1;
++        let template_index = len
++            .checked_sub(1)
++            .ok_or(PatchError::SeriesNotClonable { series: number })?;
+         let template = self.series(template_index)?;
+         let new_index = number;
+         let (Some(idx_span), Some(order_span)) = (&template.idx_span, &template.order_span) else {
+@@ -736,7 +848,21 @@
+         }
+ 
+         // 조각을 다시 스캔한다 — 구간은 조각 기준.
+-        let fragment = &self.xml[template.element_span.clone()];
++        let fragment = self
++            .xml
++            .get(template.element_span.clone())
++            .ok_or(PatchError::StructureSpanOutOfRange { series: new_index })?;
++        for span in [idx_span, order_span] {
++            if span.start > span.end
++                || span.start < template.element_span.start
++                || span.end > template.element_span.end
++            {
++                return Err(PatchError::StructureSpanOutOfRange { series: new_index });
++            }
++        }
++        if idx_span.start < order_span.end && order_span.start < idx_span.end {
++            return Err(PatchError::OverlappingStructureEdits { series: new_index });
++        }
+         let fdata = scan_chart_values(fragment)
+             .map_err(|_| PatchError::SeriesNotClonable { series: new_index })?;
+         let fseries = fdata
+@@ -861,12 +987,9 @@
+         let (Some(fidx), Some(forder)) = (&fseries.idx_span, &fseries.order_span) else {
+             return Err(PatchError::SeriesNotClonable { series: new_index });
+         };
+-        debug_assert_eq!(
+-            fidx.end - fidx.start,
+-            idx_span.end - idx_span.start,
+-            "템플릿과 조각의 idx 구간 길이가 다르다"
+-        );
+-        debug_assert_eq!(forder.end - forder.start, order_span.end - order_span.start);
++        if fidx.len() != idx_span.len() || forder.len() != order_span.len() {
++            return Err(PatchError::SeriesNotClonable { series: new_index });
++        }
+         inner.push(
+             fidx.clone(),
+             new_index.to_string().into_bytes(),
+@@ -960,6 +1083,10 @@
+                 a if a < n => self.data.series[a].element_span.start,
+                 _ => self.data.series[n - 1].element_span.end,
+             };
++            self.validate_structure_spans(
++                self.data.series.iter().map(|series| &series.element_span),
++                at,
++            )?;
+             self.push(anchor..anchor, bytes, Addr::Structure { series: at });
+         }
+         for (i, &slot) in orig_final.iter().enumerate() {
+@@ -1046,12 +1173,42 @@
+     data: &ChartData,
+     edits: &[ChartEdit],
+ ) -> Result<Vec<u8>, PatchError> {
++    splice(xml, plan_chart_edits(xml, data, edits)?)
++}
++
++fn plan_chart_edits(
++    xml: &[u8],
++    data: &ChartData,
++    edits: &[ChartEdit],
++) -> Result<Vec<Splice>, PatchError> {
+     let mut planner = Planner::new(xml, data, edits);
+     for edit in edits {
+         planner.add(edit)?;
+     }
+     planner.finish()?;
+-    splice(xml, planner.splices)
++    Ok(planner.splices)
++}
++
++/// Applies the same edits as [`apply_chart_edits`], consuming the input buffer.
++///
++/// If the final bytes fit the original capacity, the allocation and capacity are
++/// preserved. Empty edits return the input unchanged. Planning and validation
++/// finish before mutation; every rejection owns the untouched original vector.
++/// `data` must describe the same XML bytes. No full input or output copy is made;
++/// only the planner's replacement and structural fragments are allocated.
++pub fn apply_chart_edits_owned(
++    xml: Vec<u8>,
++    data: &ChartData,
++    edits: &[ChartEdit],
++) -> Result<Vec<u8>, OwnedPatchError> {
++    let prepared = plan_chart_edits(&xml, data, edits).and_then(|mut planned| {
++        let final_len = validate_splices(xml.len(), &mut planned)?;
++        Ok((planned, final_len))
++    });
++    match prepared {
++        Ok((planned, final_len)) => Ok(splice_owned(xml, planned, final_len)),
++        Err(error) => Err(OwnedPatchError { xml, error }),
++    }
+ }
+ 
+ /// 값 구간을 새 텍스트로 갈아끼운 XML 을 만든다.
+--- /dev/null
++++ b/crates/rhwp-ooxml-chart/tests/owned_patch.rs
+@@ -0,0 +1,297 @@
++use rhwp_ooxml_chart::data::{scan_chart_values, ChartData};
++use rhwp_ooxml_chart::patch::{
++    apply_chart_edits, apply_chart_edits_owned, ChartEdit, EditTarget, OwnedPatchError, PatchError,
++    ValueEdit,
++};
++use std::error::Error;
++
++fn chart() -> Vec<u8> {
++    let mut xml = String::from("<c:chartSpace><c:chart><c:plotArea><c:barChart>");
++    for index in 0..3 {
++        xml.push_str(&format!(
++            concat!(
++                "<c:ser><c:idx val=\"{0}\"/><c:order val=\"{0}\"/>",
++                "<c:tx><c:v>Series name</c:v></c:tx>",
++                "<c:spPr><a:ln/></c:spPr><c:marker><c:symbol val=\"circle\"/></c:marker>",
++                "<c:cat><c:strLit><c:ptCount val=\"3\"/>",
++                "<c:pt idx=\"0\"><c:v>Alpha</c:v></c:pt>",
++                "<c:pt idx=\"1\"><c:v>Beta</c:v></c:pt>",
++                "<c:pt idx=\"2\"><c:v>Gamma</c:v></c:pt></c:strLit></c:cat>",
++                "<c:val><c:numLit><c:ptCount val=\"3\"/>",
++                "<c:pt idx=\"0\"><c:v>123456789</c:v></c:pt>",
++                "<c:pt idx=\"1\"><c:v>123456789</c:v></c:pt>",
++                "<c:pt idx=\"2\"><c:v>123456789</c:v></c:pt></c:numLit></c:val>",
++                "<c:extLst><custom>untouched</custom></c:extLst></c:ser>"
++            ),
++            index
++        ));
++    }
++    xml.push_str("</c:barChart></c:plotArea></c:chart></c:chartSpace>");
++    xml.into_bytes()
++}
++
++fn value(series: usize, point: usize, text: &str) -> ChartEdit {
++    ChartEdit::Value(ValueEdit {
++        series,
++        point,
++        target: EditTarget::Value,
++        text: text.into(),
++    })
++}
++
++fn strings(values: &[&str]) -> Vec<String> {
++    values.iter().map(|text| (*text).into()).collect()
++}
++
++fn compare(edits: &[ChartEdit], spare: usize) {
++    let source = chart();
++    let data = scan_chart_values(&source).unwrap();
++    let expected = apply_chart_edits(&source, &data, edits).unwrap();
++    let mut owned = Vec::with_capacity(source.len() + spare);
++    owned.extend_from_slice(&source);
++    let pointer = owned.as_ptr();
++    let capacity = owned.capacity();
++    let result = apply_chart_edits_owned(owned, &data, edits).unwrap();
++    assert_eq!(result, expected);
++    if expected.len() <= capacity {
++        assert_eq!(result.as_ptr(), pointer);
++        assert_eq!(result.capacity(), capacity);
++    }
++}
++
++#[test]
++fn mixed_replacements_reuse_capacity_without_transient_growth() {
++    for lengths in [[17, 1, 9], [1, 17, 9], [9, 1, 17], [17, 9, 1], [1, 1, 1]] {
++        let edits: Vec<_> = lengths
++            .into_iter()
++            .enumerate()
++            .map(|(point, len)| value(0, point, &"7".repeat(len)))
++            .collect();
++        compare(&edits, 0);
++        compare(&edits.into_iter().rev().collect::<Vec<_>>(), 0);
++    }
++    compare(&[value(0, 0, &"8".repeat(5000))], 0);
++    compare(&[value(0, 0, &"8".repeat(5000))], 6000);
++}
++
++#[test]
++fn all_edit_variants_match_borrowed_output() {
++    let cases = vec![
++        vec![],
++        vec![ChartEdit::SeriesName {
++            series: 0,
++            text: "New name".into(),
++        }],
++        vec![ChartEdit::Value(ValueEdit {
++            series: 1,
++            point: 1,
++            target: EditTarget::Label,
++            text: "Unicode αβ".into(),
++        })],
++        vec![ChartEdit::AppendPoints {
++            series: 0,
++            target: EditTarget::Value,
++            texts: strings(&["4", "5"]),
++        }],
++        vec![ChartEdit::TruncatePoints {
++            series: 0,
++            target: EditTarget::Value,
++            keep: 1,
++        }],
++        vec![ChartEdit::AppendSeries {
++            name: Some("Added".into()),
++            labels: Some(strings(&["A", "B", "C"])),
++            values: strings(&["1", "2", "3"]),
++        }],
++        vec![ChartEdit::TruncateSeries { keep: 1 }],
++        vec![ChartEdit::InsertSeries {
++            at: 1,
++            name: None,
++            labels: None,
++            values: strings(&["1", "2", "3"]),
++        }],
++        vec![ChartEdit::RemoveSeries { at: 1 }],
++        vec![
++            ChartEdit::AppendSeries {
++                name: None,
++                labels: None,
++                values: strings(&["1", "2", "3"]),
++            },
++            ChartEdit::AppendSeries {
++                name: Some("Last".into()),
++                labels: None,
++                values: strings(&["4", "5", "6"]),
++            },
++        ],
++        vec![
++            ChartEdit::InsertSeries {
++                at: 0,
++                name: None,
++                labels: None,
++                values: strings(&["1", "2", "3"]),
++            },
++            ChartEdit::InsertSeries {
++                at: 1,
++                name: None,
++                labels: None,
++                values: strings(&["4", "5", "6"]),
++            },
++        ],
++        vec![
++            ChartEdit::AppendPoints {
++                series: 0,
++                target: EditTarget::Label,
++                texts: strings(&["Inserted"]),
++            },
++            ChartEdit::TruncatePoints {
++                series: 0,
++                target: EditTarget::Value,
++                keep: 1,
++            },
++            value(1, 0, "1"),
++        ],
++    ];
++    for edits in cases {
++        compare(&edits, 0);
++        compare(&edits, 5000);
++    }
++}
++
++fn check_recovery(data: &ChartData, edits: &[ChartEdit]) -> PatchError {
++    let source = chart();
++    let mut owned = Vec::with_capacity(source.len() + 999);
++    owned.extend_from_slice(&source);
++    let pointer = owned.as_ptr();
++    let capacity = owned.capacity();
++    let expected = apply_chart_edits(&source, data, edits).unwrap_err();
++    let error = apply_chart_edits_owned(owned, data, edits).unwrap_err();
++    assert_eq!(error.error(), &expected);
++    assert_eq!(error.to_string(), expected.to_string());
++    assert_eq!(
++        error.source().unwrap().downcast_ref::<PatchError>(),
++        Some(&expected)
++    );
++    let (original, reason) = error.into_parts();
++    assert_eq!(original, source);
++    assert_eq!(original.as_ptr(), pointer);
++    assert_eq!(original.capacity(), capacity);
++    reason
++}
++
++#[test]
++fn rejection_recovers_bytes_and_allocation() {
++    let data = scan_chart_values(&chart()).unwrap();
++    let cases = vec![
++        vec![value(0, 0, "1"), value(0, 1, "bad&text")],
++        vec![value(99, 0, "1")],
++        vec![value(0, 99, "1")],
++        vec![value(0, 0, "1"), value(0, 0, "2")],
++        vec![
++            ChartEdit::TruncatePoints {
++                series: 0,
++                target: EditTarget::Value,
++                keep: 1,
++            },
++            value(0, 2, "8"),
++        ],
++        vec![ChartEdit::TruncateSeries { keep: 0 }],
++        vec![
++            ChartEdit::RemoveSeries { at: 1 },
++            ChartEdit::SeriesName {
++                series: 1,
++                text: "Gone".into(),
++            },
++        ],
++        vec![ChartEdit::AppendSeries {
++            name: None,
++            labels: None,
++            values: vec![],
++        }],
++    ];
++    for edits in cases {
++        check_recovery(&data, &edits);
++    }
++}
++
++#[test]
++fn malformed_spans_and_template_data_are_recoverable() {
++    let source = chart();
++    let data = scan_chart_values(&source).unwrap();
++    for span in [
++        source.len()..source.len() + 1,
++        std::ops::Range { start: 10, end: 2 },
++    ] {
++        let mut malformed = data.clone();
++        malformed.series[0].values[0].span = Some(span.clone());
++        check_recovery(&malformed, &[value(0, 0, "8")]);
++        malformed = data.clone();
++        malformed.series[2].element_span = span.clone();
++        check_recovery(
++            &malformed,
++            &[ChartEdit::AppendSeries {
++                name: None,
++                labels: None,
++                values: strings(&["1", "2", "3"]),
++            }],
++        );
++        malformed = data.clone();
++        malformed.series[2].idx_span = Some(span);
++        check_recovery(
++            &malformed,
++            &[ChartEdit::InsertSeries {
++                at: 1,
++                name: None,
++                labels: None,
++                values: strings(&["1", "2", "3"]),
++            }],
++        );
++    }
++    let mut malformed = data.clone();
++    malformed.series[0].values[1].span = malformed.series[0].values[0].span.clone();
++    check_recovery(&malformed, &[value(0, 0, "1"), value(0, 1, "2")]);
++    let mut malformed = data.clone();
++    malformed.series[0].values_shape.as_mut().unwrap().insert_at = Some(source.len() + 1);
++    check_recovery(
++        &malformed,
++        &[ChartEdit::AppendPoints {
++            series: 0,
++            target: EditTarget::Value,
++            texts: strings(&["1"]),
++        }],
++    );
++    let mut malformed = data;
++    malformed.series.clear();
++    check_recovery(
++        &malformed,
++        &[ChartEdit::AppendSeries {
++            name: None,
++            labels: None,
++            values: vec![],
++        }],
++    );
++}
++
++#[test]
++fn errors_outlive_borrowed_arguments_and_empty_edits_preserve_input() {
++    fn make_error() -> OwnedPatchError {
++        let xml = chart();
++        let data = scan_chart_values(&xml).unwrap();
++        let edits = [value(0, 0, "&")];
++        apply_chart_edits_owned(xml, &data, &edits).unwrap_err()
++    }
++    let error: Box<dyn Error + Send + Sync> = Box::new(make_error());
++    assert!(error.source().unwrap().is::<PatchError>());
++    let data = scan_chart_values(&chart()).unwrap();
++    for mut xml in [Vec::new(), Vec::with_capacity(1234), chart()] {
++        if !xml.is_empty() {
++            xml.reserve(100);
++        }
++        let pointer = xml.as_ptr();
++        let len = xml.len();
++        let capacity = xml.capacity();
++        let result = apply_chart_edits_owned(xml, &data, &[]).unwrap();
++        assert_eq!(result.as_ptr(), pointer);
++        assert_eq!(result.len(), len);
++        assert_eq!(result.capacity(), capacity);
++    }
++}

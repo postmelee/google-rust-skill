@@ -1,0 +1,12 @@
+
+running 4 tests
+test growth_beyond_capacity_and_empty_input_work ... ok
+test errors_return_original_allocation_and_typed_cause_after_borrows_end ... ok
+test mixed_growth_and_shrink_do_not_require_transient_extra_capacity ... ok
+test all_operations_match_frozen_outputs_with_spare_capacity ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling rhwp-ooxml-chart v0.1.0 (<workspace>/crates/rhwp-ooxml-chart)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.19s
+     Running tests/__external.rs (target/pr-review/debug/deps/__external-ca41a11f8f6251b4)

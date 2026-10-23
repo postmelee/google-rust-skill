@@ -1,0 +1,35 @@
+   Compiling rhwp-ooxml-chart v0.1.0 (<workspace>/crates/rhwp-ooxml-chart)
+error[E0432]: unresolved imports `rhwp_ooxml_chart::patch::write_chart_edits`, `rhwp_ooxml_chart::patch::WritePatchError`
+ --> crates/rhwp-ooxml-chart/tests/write_chart_edits.rs:3:43
+  |
+3 |     apply_chart_edits, apply_value_edits, write_chart_edits, ChartEdit, EditTarget, PatchError,
+  |                                           ^^^^^^^^^^^^^^^^^ no `write_chart_edits` in `patch`
+4 |     ValueEdit, WritePatchError,
+  |                ^^^^^^^^^^^^^^^ no `WritePatchError` in `patch`
+  |
+help: a similar name exists in the module
+  |
+3 -     apply_chart_edits, apply_value_edits, write_chart_edits, ChartEdit, EditTarget, PatchError,
+3 +     apply_chart_edits, apply_value_edits, apply_chart_edits, ChartEdit, EditTarget, PatchError,
+  |
+help: a similar name exists in the module
+  |
+4 -     ValueEdit, WritePatchError,
+4 +     ValueEdit, PatchError,
+  |
+
+error[E0282]: type annotations needed
+   --> crates/rhwp-ooxml-chart/tests/write_chart_edits.rs:179:34
+    |
+179 |         error.source().and_then(|e| e.downcast_ref::<PatchError>()),
+    |                                  ^  - type must be known at this point
+    |
+help: consider giving this closure parameter an explicit type
+    |
+179 |         error.source().and_then(|e: /* Type */| e.downcast_ref::<PatchError>()),
+    |                                   ++++++++++++
+
+Some errors have detailed explanations: E0282, E0432.
+For more information about an error, try `rustc --explain E0282`.
+error: could not compile `rhwp-ooxml-chart` (test "write_chart_edits") due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...

@@ -1,0 +1,55 @@
+{
+  "summary": "Added apply_chart_edits_owned and OwnedPatchError, using the shared planner and a safe two-pass in-place splice algorithm. Added six integration tests; all 165 existing unit tests and six integration tests pass.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/api-design.md",
+    "skill/references/ownership-errors.md",
+    "skill/references/safety-docs.md",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs"
+  ],
+  "commands": [
+    {
+      "command": "rg --files workspace/crates/rhwp-ooxml-chart/tests",
+      "outcome": "Exit 2: tests directory did not yet exist; subsequently created it."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all --manifest-path workspace/Cargo.toml",
+      "outcome": "Passed; formatted implementation and initial tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Passed."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "First run passed 165 unit and four integration tests. Final run after additional cases passed 165 unit and six integration tests, with zero failures; zero doctests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "outcome": "First run failed on the intentionally reversed range literal in a malformed-input test (reversed_empty_ranges). Replaced the literal with explicit Range fields, without suppressing any lint. Second run passed."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "outcome": "Passed twice while adding and correcting integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "outcome": "Passed twice, including after final documentation adjustment."
+    }
+  ],
+  "design_decisions": [
+    "The owned API takes sole ownership of the input Vec. Planning and validation borrow it without mutation; failures move the same vector into OwnedPatchError. The error owns its PatchError, implements Debug/Display/Error, and exposes the typed underlying error through Error::source.",
+    "Validation checks planned ranges, overlaps and checked final size before writing. First compact retained original bytes, then expand backward with owned planned fragments. This avoids a second full input/output buffer and preserves pointer and capacity whenever final length fits, regardless of temporary expansion implied by edit order.",
+    "Both APIs share the existing planner and splice validation. Existing public signatures, variants and public fields remain unchanged; PatchError gains the Error trait to support typed source chaining.",
+    "Hardened planner accesses for empty public ChartData, invalid clone template ranges, invalid numbering ranges and malformed constituent deletion spans. Removed debug-only assumptions about template numbering span lengths; rescanned fragment spans determine clone edits.",
+    "Integration tests compare every supported operation against the borrowed API, exercise equal-anchor multiple series insertions, exact-capacity mixed replacement lengths, structural growth and shrinkage, recoverable validation failures, and error lifetimes after borrowed inputs disappear."
+  ],
+  "limitations": [
+    "This is isolated crate validation, not a full document engine or visual integration test.",
+    "Allocator exhaustion follows ordinary Vec allocation behavior; recovery is guaranteed for validation errors, not process-level allocation failure.",
+    "No external sources, other packets, parent repositories, or prior evaluation results were read. No benchmarks or model-performance metrics were produced."
+  ]
+}

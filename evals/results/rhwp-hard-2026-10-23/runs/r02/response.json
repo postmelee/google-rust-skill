@@ -1,0 +1,56 @@
+{
+  "summary": "Added write_chart_edits<W: Write + ?Sized> with complete pre-write validation, shared edit planning and borrowed output chunks. Added WritePatchError with typed sources and eight integration tests. All required checks passed.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/rustguide.md",
+    "workspace/Cargo.toml",
+    "workspace/rust-toolchain.toml",
+    "workspace/crates/rhwp-ooxml-chart/Cargo.toml",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all --manifest-path workspace/Cargo.toml",
+      "cwd": ".",
+      "outcome": "Passed; formatted modified Rust files."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed twice, including after the final implementation correction."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "cwd": "workspace",
+      "outcome": "Passed twice: 165 existing unit tests and 8 new integration tests; 0 failed, 0 ignored; 0 doctests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "cwd": "workspace",
+      "outcome": "Passed twice with warnings denied, including after the final correction."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "cwd": "workspace",
+      "outcome": "Passed twice, including the final implementation."
+    }
+  ],
+  "design_decisions": [
+    "Both public edit paths use plan_chart_edits, the existing Planner, the same sorted span validation, and the same splice_chunks iterator. All bounds and overlaps are checked before the writer is called, preserving the existing error ordering and insertion ordering.",
+    "The writer and unchanged XML are borrowed. Replacement and series-clone fragments remain planner-owned. The streaming path passes borrowed slices directly to write_all and never collects or clones the full document to feed the writer.",
+    "WritePatchError owns either the original PatchError or the original io::Error. Error::source returns that exact typed cause. I/O payload allocation identity is tested. PatchError gains only the additive Error implementation.",
+    "write_all provides short-write, Interrupted, and WriteZero behavior. Other I/O errors stop emission immediately and may leave a prefix. Documentation distinguishes validation atomicity from the absence of I/O rollback. The API never flushes or takes ownership of the writer.",
+    "Existing signatures, variants, public struct fields, and exhaustive matching remain unchanged. The new error models the two fixed failure domains. User-specified slice parameters and compatibility requirements take precedence over unrelated API generalization or non_exhaustive migrations.",
+    "Cloning a series now checks an empty template list, template bounds, and index/order span bounds rather than allowing malformed public coordinates to panic. The original template/fragment length consistency checks are preserved as recoverable errors.",
+    "Integration tests exercise every edit operation against the buffered API, equal-offset insertion order, combined structural/value edits, byte preservation, trait-object writers, writer reuse, late invalid/overlapping spans, planner failures, short writes, Interrupted, WriteZero, custom I/O payload identity, and direct borrowing for no-edit output."
+  ],
+  "limitations": [
+    "This was an isolated component implementation using the supplied pinned crate and cached dependencies; no full document-engine, UI, or visual validation was performed.",
+    "No allocator benchmark or peak-memory metric was measured. Streaming allocation behavior is supported by code structure and the no-edit input-pointer test, not a quantitative performance claim.",
+    "ChartData must describe the same XML as documented by the existing API; this change does not authenticate scan provenance or add semantic chart validation.",
+    "No required checks failed."
+  ]
+}

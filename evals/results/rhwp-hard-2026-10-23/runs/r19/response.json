@@ -1,0 +1,51 @@
+{
+  "summary": "Implemented patch::write_chart_edits for borrowed Write + ?Sized sinks, sharing planning, full preflight validation, and byte chunk traversal with the existing buffered API. Added WritePatchError with typed error sources and eight integration tests.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "workspace/crates/rhwp-ooxml-chart/src/patch.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/data.rs",
+    "workspace/crates/rhwp-ooxml-chart/src/lib.rs"
+  ],
+  "commands": [
+    {
+      "command": "rg --files crates/rhwp-ooxml-chart/tests",
+      "outcome": "Initial discovery reported that the tests directory did not exist; created it for the new integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "outcome": "Passed both runs, after initial implementation and after structural-coordinate checks."
+    },
+    {
+      "command": "cargo +1.93.1 build --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "Passed both initial and final runs."
+    },
+    {
+      "command": "cargo +1.93.1 test --offline --locked --workspace --target-dir target/pr-review",
+      "outcome": "First run: 165 existing unit tests passed; six new integration tests passed and the custom-payload test failed because its fixture boxed Box<Payload> instead of exposing Payload. Explicitly coerced the fixture to Box<dyn Error + Send + Sync>. Second run passed 165 unit tests and seven integration tests. Final run after structural-coordinate validation passed 165 unit tests and eight integration tests; zero doctests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets --target-dir target/pr-review -- -D warnings",
+      "outcome": "Passed both initial and final runs without warnings."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "outcome": "Passed both initial and final runs."
+    }
+  ],
+  "design_decisions": [
+    "Both public output paths invoke the same Planner and ValidatedSplices preflight. All planned ranges are bounds-checked before sorting, then overlaps are checked before any writer method is called. The existing (start, end, seq) sort order is unchanged.",
+    "A shared iterator borrows unchanged input slices and owned planner fragments. The streaming API never invokes the buffered output method or clones the input/output XML; existing structural fragment allocation remains permitted.",
+    "The new API borrows &mut W with W: Write + ?Sized, supporting trait objects and leaving writer ownership, flushing, and closing to the caller. write_all supplies short-write, Interrupted, and WriteZero behavior.",
+    "WritePatchError keeps PatchError and io::Error as separate public variants. Both implement Error; source returns the original typed cause, and the I/O error is moved unchanged, retaining its custom payload. I/O failures stop immediately and can leave a prefix; validation failures perform no writer calls.",
+    "Existing public function signatures, structs, enums, and variants remain intact. Added Error for PatchError instead of changing its representation. Existing inline tests were preserved.",
+    "Checked clone-template slicing and replaced debug-only width assertions with explicit errors so malformed clone coordinates and empty clone templates fail before output instead of panicking.",
+    "Integration tests exercise every ChartEdit variant, mixed structural/value edits, coincident append ordering, exact preservation of unedited bytes, trait-object sinks, late planning/bounds/overlap failures, malformed clone coordinates, short writes, interruption retries, WriteZero, custom error payload identity, and no flushing."
+  ],
+  "limitations": [
+    "This is an isolated crate implementation and test run, not an upstream contribution, full document-engine integration, or visual validation.",
+    "No allocation benchmark or peak-memory metric was collected. The absence of complete-output buffering on the streaming path was established by its implementation structure.",
+    "The caller must continue to supply ChartData scanned from the same XML. I/O failures cannot roll back bytes accepted by the caller-owned sink.",
+    "No skill/SKILL.md was present in this packet. No external repositories, other packets, prior results, web browsing, or delegation were used."
+  ]
+}
