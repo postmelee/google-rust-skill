@@ -1,6 +1,6 @@
 # Google Rust Guidelines — Agent Skill
 
-[한국어](README.ko.md)
+[![Validate skill](https://github.com/postmelee/google-rust-skill/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/postmelee/google-rust-skill/actions/workflows/validate.yml)
 
 An independent community skill for applying [Google's Rust Style Guide](https://google.github.io/styleguide/rustguide.html)
 while writing, reviewing, or refactoring Rust. It preserves library/application
@@ -15,31 +15,38 @@ Rust tooling is needed only when the requested coding task requires it.
 
 ## Install
 
-From a local checkout, with the [Skills CLI](https://github.com/vercel-labs/skills)
-(currently requires Node.js 22.20+):
+Install from GitHub with the [Skills CLI](https://github.com/vercel-labs/skills)
+and Node.js 22.20+. Version 1.7.4 is the installer version tested for this release:
 
 ```sh
-npx skills add . --skill google-rust-guidelines -a codex
+npx skills@1.7.4 add postmelee/google-rust-skill --skill google-rust-guidelines -a codex
 ```
 
-After publishing this repository, replace OWNER/REPOSITORY with its actual
-GitHub owner and name:
+This installs from the default branch. To select the published v0.1.0 contents:
 
 ```sh
-npx skills add OWNER/REPOSITORY --skill google-rust-guidelines
+npx skills@1.7.4 add https://github.com/postmelee/google-rust-skill/tree/v0.1.0 --skill google-rust-guidelines -a codex
 ```
 
-The CLI lets users select supported agents. Add `-g` for a user-wide installation;
-omit it for the current project. Inspect discovery before installing with
-`npx skills add . --list`. These are installer commands, not Rust dependencies.
+Omit `-a codex` to select another supported agent. Add `-g` for a user-wide
+installation; omit it for the current project. Inspect discovery before installing
+with `npx skills@1.7.4 add postmelee/google-rust-skill --list`.
+From a local checkout, replace the repository argument with `.`.
+These are installer commands, not Rust dependencies.
 
-Without Node, copy the **entire** `skills/google-rust-guidelines` directory into
-your agent's skill directory. For Codex, common locations are
+Without Node, download [google-rust-guidelines.zip](https://github.com/postmelee/google-rust-skill/releases/download/v0.1.0/google-rust-guidelines.zip)
+and [SHA256SUMS](https://github.com/postmelee/google-rust-skill/releases/download/v0.1.0/SHA256SUMS)
+from the [v0.1.0 release](https://github.com/postmelee/google-rust-skill/releases/tag/v0.1.0).
+Verify the download with `shasum -a 256 -c SHA256SUMS` on macOS or
+`sha256sum -c SHA256SUMS` on Linux, then extract it. Copy the **entire**
+`google-rust-guidelines` folder into your agent's skill directory. You can also
+copy `skills/google-rust-guidelines` from a checkout. For Codex, common locations are
 `~/.agents/skills/` (user) and `.agents/skills/` (project). For Claude Code,
 use `~/.claude/skills/` or `.claude/skills/`. Keep `NOTICE.md`, `LICENSE`,
 `references/`, and `agents/` with `SKILL.md`; copying the entrypoint alone
 loses both guidance and attribution. Check for an existing installation before
-replacing it.
+replacing it. See the [official Codex skill documentation](https://learn.chatgpt.com/docs/build-skills)
+for host-specific setup.
 
 The package follows the [Agent Skills specification](https://agentskills.io/specification).
 Codex UI metadata lives in `agents/openai.yaml`; other hosts may ignore it.
@@ -137,17 +144,21 @@ update attribution and pins, and rerun relevant behavior cases. Retain old resul
 with their manifests. Do not silently refresh installed references during a
 normal code task or claim a pinned release is always current.
 
-## Publish on GitHub
+## Release maintenance
 
 1. Run the validation commands and inspect the package and evaluation report.
-2. Create a public repository under the desired account or organization.
-3. Push this repository and replace the OWNER/REPOSITORY installation example.
-4. Tag a release, attach the generated ZIP, and state the tested host/model
-   conditions and upstream version in the release notes.
+2. Push changes and wait for the GitHub Actions workflow to pass on that commit.
+3. Verify installation from GitHub in a fresh temporary project and compare all
+   installed files with the runtime package.
+4. Tag the verified commit, attach the generated ZIP and its SHA-256 checksum,
+   and state the tested host/model conditions and upstream version in the release notes.
+5. Verify installation from the tag and download the published assets to check
+   their bytes. Update the versioned installation links for the next release.
 
 No GitHub repository is created or published by the maintenance scripts.
 The included GitHub Actions workflow runs structural checks, source verification,
-fixture compilation, and tooling tests; agent evaluations are run separately.
+fixture compilation, tooling tests, archived-result integrity checks, and packaging;
+agent evaluations are run separately.
 
 ## License and acknowledgements
 
