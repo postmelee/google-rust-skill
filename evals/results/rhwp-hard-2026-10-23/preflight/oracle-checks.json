@@ -1,0 +1,62 @@
+{
+  "H1-before": {
+    "command": [
+      "cargo",
+      "+1.93.1",
+      "test",
+      "--offline",
+      "--locked",
+      "--target-dir",
+      "target/pr-review",
+      "--test",
+      "__external"
+    ],
+    "exit_code": 101,
+    "log": "H1-before.log"
+  },
+  "H1-sanity": {
+    "command": [
+      "cargo",
+      "+1.93.1",
+      "test",
+      "--offline",
+      "--locked",
+      "--target-dir",
+      "target/pr-review",
+      "--test",
+      "__external"
+    ],
+    "exit_code": 0,
+    "log": "H1-sanity.log"
+  },
+  "H2-before": {
+    "command": [
+      "cargo",
+      "+1.93.1",
+      "test",
+      "--offline",
+      "--locked",
+      "--target-dir",
+      "target/pr-review",
+      "--test",
+      "__external"
+    ],
+    "exit_code": 101,
+    "log": "H2-before.log"
+  },
+  "H2-sanity": {
+    "command": [
+      "cargo",
+      "+1.93.1",
+      "test",
+      "--offline",
+      "--locked",
+      "--target-dir",
+      "target/pr-review",
+      "--test",
+      "__external"
+    ],
+    "exit_code": 0,
+    "log": "H2-sanity.log"
+  }
+}

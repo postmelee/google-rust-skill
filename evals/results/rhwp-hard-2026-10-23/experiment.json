@@ -1,0 +1,218 @@
+{
+  "frozen_at_utc": "2026-10-23T06:59:20.206000+00:00",
+  "source_commit": "1a76570e833917d15817415a53c09ad61ab3203f",
+  "candidate_release": "v0.1.0",
+  "candidate_runtime_commit": "3f85197d7b39bd4e38406c1c36bcb1eff8e27d7b",
+  "repository_base_commit": "2d73adaf5f2f22ee9d978bf2e3de9a21302d7f25",
+  "runs": [
+    {
+      "case": "H2",
+      "condition": "0xmassi",
+      "repetition": 1,
+      "id": "r01",
+      "packet_manifest_sha256": "e338f74d1f891132c49c201cea5c0fa8110c8037ec193d306ac8f37236121eb0"
+    },
+    {
+      "case": "H1",
+      "condition": "studentweis",
+      "repetition": 3,
+      "id": "r02",
+      "packet_manifest_sha256": "7108d6bb8ef8951abeaf24cabc41702b2dcdf6f7665cba9b522654d9b15468fb"
+    },
+    {
+      "case": "H2",
+      "condition": "candidate",
+      "repetition": 1,
+      "id": "r03",
+      "packet_manifest_sha256": "b5713675fa6f994a88d2e651bc82f5df8dc7dd8f425491663ac9457d655d8cec"
+    },
+    {
+      "case": "H2",
+      "condition": "candidate",
+      "repetition": 3,
+      "id": "r04",
+      "packet_manifest_sha256": "b5713675fa6f994a88d2e651bc82f5df8dc7dd8f425491663ac9457d655d8cec"
+    },
+    {
+      "case": "H2",
+      "condition": "candidate",
+      "repetition": 2,
+      "id": "r05",
+      "packet_manifest_sha256": "b5713675fa6f994a88d2e651bc82f5df8dc7dd8f425491663ac9457d655d8cec"
+    },
+    {
+      "case": "H1",
+      "condition": "0xmassi",
+      "repetition": 1,
+      "id": "r06",
+      "packet_manifest_sha256": "28095fb85f5ca4a9b35f29d7f1bd49035f9190a704a98ef20f4ec057bbbdf977"
+    },
+    {
+      "case": "H2",
+      "condition": "0xmassi",
+      "repetition": 2,
+      "id": "r07",
+      "packet_manifest_sha256": "e338f74d1f891132c49c201cea5c0fa8110c8037ec193d306ac8f37236121eb0"
+    },
+    {
+      "case": "H2",
+      "condition": "0xmassi",
+      "repetition": 3,
+      "id": "r08",
+      "packet_manifest_sha256": "e338f74d1f891132c49c201cea5c0fa8110c8037ec193d306ac8f37236121eb0"
+    },
+    {
+      "case": "H1",
+      "condition": "0xmassi",
+      "repetition": 3,
+      "id": "r09",
+      "packet_manifest_sha256": "28095fb85f5ca4a9b35f29d7f1bd49035f9190a704a98ef20f4ec057bbbdf977"
+    },
+    {
+      "case": "H1",
+      "condition": "studentweis",
+      "repetition": 2,
+      "id": "r10",
+      "packet_manifest_sha256": "7108d6bb8ef8951abeaf24cabc41702b2dcdf6f7665cba9b522654d9b15468fb"
+    },
+    {
+      "case": "H1",
+      "condition": "candidate",
+      "repetition": 2,
+      "id": "r11",
+      "packet_manifest_sha256": "5e582d13f456365a15459fcc853e7b4110dd7165ae15a1b33bf39e6ab1228af9"
+    },
+    {
+      "case": "H1",
+      "condition": "none",
+      "repetition": 1,
+      "id": "r12",
+      "packet_manifest_sha256": "48153dc9ab6078a74bce61ed747ee4b4d05fd694e22e8ef7acba7c7cd9709c4f"
+    },
+    {
+      "case": "H2",
+      "condition": "studentweis",
+      "repetition": 3,
+      "id": "r13",
+      "packet_manifest_sha256": "70ad7aa5365e2c336a38266c638bf3b3e7a16c7e4e8fb3265a0e8caa2976b618"
+    },
+    {
+      "case": "H2",
+      "condition": "none",
+      "repetition": 1,
+      "id": "r14",
+      "packet_manifest_sha256": "f36beff431499827a31da89e3862f2e543566a591586692a23c1a9f03e846deb"
+    },
+    {
+      "case": "H1",
+      "condition": "studentweis",
+      "repetition": 1,
+      "id": "r15",
+      "packet_manifest_sha256": "7108d6bb8ef8951abeaf24cabc41702b2dcdf6f7665cba9b522654d9b15468fb"
+    },
+    {
+      "case": "H2",
+      "condition": "studentweis",
+      "repetition": 1,
+      "id": "r16",
+      "packet_manifest_sha256": "70ad7aa5365e2c336a38266c638bf3b3e7a16c7e4e8fb3265a0e8caa2976b618"
+    },
+    {
+      "case": "H1",
+      "condition": "candidate",
+      "repetition": 1,
+      "id": "r17",
+      "packet_manifest_sha256": "5e582d13f456365a15459fcc853e7b4110dd7165ae15a1b33bf39e6ab1228af9"
+    },
+    {
+      "case": "H2",
+      "condition": "none",
+      "repetition": 2,
+      "id": "r18",
+      "packet_manifest_sha256": "f36beff431499827a31da89e3862f2e543566a591586692a23c1a9f03e846deb"
+    },
+    {
+      "case": "H1",
+      "condition": "none",
+      "repetition": 2,
+      "id": "r19",
+      "packet_manifest_sha256": "48153dc9ab6078a74bce61ed747ee4b4d05fd694e22e8ef7acba7c7cd9709c4f"
+    },
+    {
+      "case": "H1",
+      "condition": "none",
+      "repetition": 3,
+      "id": "r20",
+      "packet_manifest_sha256": "48153dc9ab6078a74bce61ed747ee4b4d05fd694e22e8ef7acba7c7cd9709c4f"
+    },
+    {
+      "case": "H2",
+      "condition": "studentweis",
+      "repetition": 2,
+      "id": "r21",
+      "packet_manifest_sha256": "70ad7aa5365e2c336a38266c638bf3b3e7a16c7e4e8fb3265a0e8caa2976b618"
+    },
+    {
+      "case": "H1",
+      "condition": "0xmassi",
+      "repetition": 2,
+      "id": "r22",
+      "packet_manifest_sha256": "28095fb85f5ca4a9b35f29d7f1bd49035f9190a704a98ef20f4ec057bbbdf977"
+    },
+    {
+      "case": "H2",
+      "condition": "none",
+      "repetition": 3,
+      "id": "r23",
+      "packet_manifest_sha256": "f36beff431499827a31da89e3862f2e543566a591586692a23c1a9f03e846deb"
+    },
+    {
+      "case": "H1",
+      "condition": "candidate",
+      "repetition": 3,
+      "id": "r24",
+      "packet_manifest_sha256": "5e582d13f456365a15459fcc853e7b4110dd7165ae15a1b33bf39e6ab1228af9"
+    }
+  ],
+  "repetitions_per_case_condition": 3,
+  "order": "Python random.Random(20261023).shuffle over case, repetition, then candidate/studentweis/0xmassi/none; all packets frozen before launch.",
+  "model": "Inherited host model with no override; exact backend identity, sampling parameters, token counts and inference cost are not exposed.",
+  "host": "Darwin arm64; rustc/cargo 1.93.1; fresh collaboration contexts without parent history. Shared filesystem with procedural isolation.",
+  "protocol": "Exactly 24 initial sessions; self-correction allowed within a session; no grader feedback or repairs; retain every submitted result and failure.",
+  "grading": "Frozen executable gates plus primary-agent non-blinded source review. No post-hoc scoring criteria.",
+  "frozen_inputs_sha256": {
+    "evals/integration-hard/TASK.md": "04d9c8d24d9f0c749bca6ce34229878eff37d863dc52eef96982a5057cab5c1f",
+    "evals/integration-hard/cases.json": "76e748289c3cab8613b99a922ef9326cf3dcd5d3fb364e3d5f3e38c1b0bc72bb",
+    "evals/integration-hard/conditions.json": "9949c8e73aa9b1897cef820058edfb0b467d9b679925a141fdecff4135686451",
+    "evals/integration-hard/oracles/H1.rs": "1913897bedaf05ae7146cdda92cfd0c3efcfcc6147a961c751bb81f12283504b",
+    "evals/integration-hard/oracles/H2.rs": "f7ae73b492a21cb878a19e914a42d33caf02ec0e2475abc94f7972794d240065",
+    "evals/integration-hard/oracles/golden/append-points.xml": "fde8488ce41ffb766fd1630af10dbcef6cf46edcf51b49771f24f36fa8229ef4",
+    "evals/integration-hard/oracles/golden/append-series.xml": "d3936a1debc1f753ff3f5b6ea5ddf8662b42390f1781bd1f09d2dc6d96247b39",
+    "evals/integration-hard/oracles/golden/empty.xml": "2d1fd773eef8508911dabfb558c9f414e9fec97f9bf6035d9c230505c337c17b",
+    "evals/integration-hard/oracles/golden/insert-series.xml": "b896cd5cb56c0d1b2a5cf78dbed312c95090032990ee68eb39a532141a07b6c5",
+    "evals/integration-hard/oracles/golden/mixed-structure.xml": "1d404bfc21abd640940c046dad59b0113faeb30be3ff403f67de73a5c05b1695",
+    "evals/integration-hard/oracles/golden/name.xml": "f898a2447be56dd4de3c24c86b7e8ba3456baa2b303c3eb7f394534b63b49c3a",
+    "evals/integration-hard/oracles/golden/remove-series.xml": "2a0f7871a7328fb6c0c81f6e45f4656b30fd41e6d55c64407ff37aada7a2a545",
+    "evals/integration-hard/oracles/golden/truncate-points.xml": "1b53e587371dc7830a4da550f5ec1075c65d467479154f20d502a13607406fe9",
+    "evals/integration-hard/oracles/golden/truncate-series.xml": "68eb2c2fd88dbedf872b074ac92aaa0e73177851c4b7efa0d5a64d3192345ddf",
+    "evals/integration-hard/oracles/golden/values.xml": "82dd1ed10f4beb5df9e9b9eea7dc28c71fde751b65be2a178765f9412f5e7d68",
+    "evals/integration-hard/oracles/support.rs": "cde99d5614cbc7f418e60a8b47416eeb35da1438e4ee2741345dfdb6c3a1a45f",
+    "evals/integration-hard/rubric.json": "54d255677c9b28182449dc75a41d6328e851ffd9bf89d6f13a970ed0032b0535",
+    "evals/integration-hard/workspace/Cargo.lock": "eb8ff075306f17ac4c1c97f4301718287d9f4542fcc1c6dd96866f5a03bf0a3d",
+    "evals/integration-hard/workspace/Cargo.toml": "163eb09d520766868be8bd7bdc72784640ddb94c739dca9209cdd93f8adc3551",
+    "provenance/baselines.json": "e1d5b892b1f6527bc90f9f25d29b89d39dc0c88864b41216802d305bd574a4c8",
+    "provenance/rhwp-chart.json": "8a87899058bc4c6db1e791f5d76b19bea8f6f7a5658acf135857d6dec943103c",
+    "scripts/fetch_sources.py": "6bd9bc1bc4ae5407881cd32398c864b44d014ed4652852aa26df16ba8ea0fe6b",
+    "scripts/rhwp_eval.py": "717f274e5318f8c5578f862db82a67384a3849a7ce6480d4c49cd233631142fe",
+    "scripts/rhwp_hard_eval.py": "8106153382d3e29f716f49317b7c7113b7c0c4cd896c16987194b99b1b36a440"
+  },
+  "method_amendments": [],
+  "limitations": [
+    "Two maintainer-designed development tasks, not upstream issues or held-out random samples.",
+    "Three repetitions expose observed variation but are not sufficient for general superiority or statistical significance.",
+    "Complete chart crate only; no root engine, bindings, WASM, full document round-trip or visual corpus validation.",
+    "Skill reading is explicit; host automatic activation and actual reference consumption are not measured.",
+    "Full inference/tool traces are unavailable; response.json commands are self-reported, independently replayed logs are captured."
+  ],
+  "publication_normalization": "Host-specific packet/repository and temporary-workspace paths in JSON/logs are normalized; patches and input/output manifests remain byte-identical."
+}

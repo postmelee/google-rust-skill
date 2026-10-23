@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "authored_before_runs": true,
+  "pass_rule": "All executable gates, all frozen manual criteria, scope review, and expected test sensitivity must pass. No grader repairs or replacements.",
+  "gates": {
+    "scope": "Only patch.rs and new integration .rs tests; original inline tests byte-identical; no suppressed checks, new unsafe, or panic recovery.",
+    "build": "Rust 1.93.1 offline locked workspace build",
+    "tests": "All 165 original tests and at least one new agent test pass",
+    "clippy": "All targets with -D warnings",
+    "format": "rustfmt --check",
+    "oracle": "Four external tests per case, with ten pristine-output goldens and existing consumer compile checks",
+    "sensitivity": "Agent-added tests fail against pristine source because the requested API is absent or behavior missing, not because of infrastructure"
+  },
+  "manual_criteria": {
+    "H1": [
+      "The writer reuses the existing planner and does not materialize or clone the whole input/output XML; existing planned fragments are allowed.",
+      "All validation completes before writing, and I/O handling preserves typed causes without explicit flush or panic recovery.",
+      "Public documentation distinguishes validation atomicity from a possible written prefix on I/O failure."
+    ],
+    "H2": [
+      "The owned path reuses the existing planner without cloning the whole input or constructing a second full output buffer; existing planned fragments are allowed.",
+      "The original vector is owned by the returned error, with validation completed before mutation and no borrowed lifetime required for recovery.",
+      "Existing APIs, enum variants and struct construction remain compatible; no new unsafe code or suppressed checks are used."
+    ]
+  },
+  "analysis_plan": {
+    "primary": "Per-case pass count out of three, and overall count out of six per condition. Every attempt is retained.",
+    "secondary": "Executable failing gates and named external tests, plus frozen manual criteria; no post-hoc style score.",
+    "repetitions": 3,
+    "conditions": [
+      "candidate",
+      "studentweis",
+      "0xmassi",
+      "none"
+    ],
+    "cases": [
+      "H1",
+      "H2"
+    ],
+    "stopping": "Exactly 24 completed initial sessions. No replacements, rerolls, or task changes after results are inspected. Infrastructure failures remain separate and counted; a retry requires a recorded amendment and is not substituted for the original.",
+    "inference": "Descriptive comparison only; two selected development tasks and unknown backend/sampling do not justify general superiority, significance or token-efficiency claims."
+  }
+}

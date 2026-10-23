@@ -1,0 +1,29 @@
+   Compiling rhwp-ooxml-chart v0.1.0 (<workspace>/crates/rhwp-ooxml-chart)
+error[E0432]: unresolved imports `rhwp_ooxml_chart::patch::apply_chart_edits_owned`, `rhwp_ooxml_chart::patch::OwnedPatchError`
+ --> crates/rhwp-ooxml-chart/tests/__external.rs:5:50
+  |
+5 | use rhwp_ooxml_chart::patch::{apply_chart_edits, apply_chart_edits_owned, OwnedPatchError, PatchError};
+  |                                                  ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^ no `OwnedPatchError` in `patch`
+  |                                                  |
+  |                                                  no `apply_chart_edits_owned` in `patch`
+  |
+help: a similar name exists in the module
+  |
+5 - use rhwp_ooxml_chart::patch::{apply_chart_edits, apply_chart_edits_owned, OwnedPatchError, PatchError};
+5 + use rhwp_ooxml_chart::patch::{apply_chart_edits, apply_chart_edits, OwnedPatchError, PatchError};
+  |
+help: a similar name exists in the module
+  |
+5 - use rhwp_ooxml_chart::patch::{apply_chart_edits, apply_chart_edits_owned, OwnedPatchError, PatchError};
+5 + use rhwp_ooxml_chart::patch::{apply_chart_edits, apply_chart_edits_owned, PatchError, PatchError};
+  |
+
+error[E0282]: type annotations needed
+  --> crates/rhwp-ooxml-chart/tests/__external.rs:68:50
+   |
+68 |         assert_eq!(recovered, bytes); assert_eq!(recovered.as_ptr(), ptr); assert_eq!(recovered.capacity(), capacity);
+   |                                                  ^^^^^^^^^ cannot infer type
+
+Some errors have detailed explanations: E0282, E0432.
+For more information about an error, try `rustc --explain E0282`.
+error: could not compile `rhwp-ooxml-chart` (test "__external") due to 2 previous errors

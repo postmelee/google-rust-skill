@@ -1,0 +1,24 @@
+
+running 1 test
+test generate ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling rhwp-ooxml-chart v0.1.0 (<workspace>/crates/rhwp-ooxml-chart)
+warning: function `expected` is never used
+  --> crates/rhwp-ooxml-chart/tests/__support.rs:36:8
+   |
+36 | pub fn expected(name: &str) -> Vec<u8> {
+   |        ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `legacy_error` is never used
+  --> crates/rhwp-ooxml-chart/tests/__support.rs:42:8
+   |
+42 | pub fn legacy_error(error: PatchError) -> &'static str {
+   |        ^^^^^^^^^^^^
+
+warning: `rhwp-ooxml-chart` (test "generate") generated 2 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.82s
+     Running tests/generate.rs (target/pr-review/debug/deps/generate-9fd4568303bbf3df)

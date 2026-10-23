@@ -1,0 +1,22 @@
+   Compiling rhwp-ooxml-chart v0.1.0 (<workspace>/crates/rhwp-ooxml-chart)
+error[E0432]: unresolved imports `rhwp_ooxml_chart::patch::write_chart_edits`, `rhwp_ooxml_chart::patch::WritePatchError`
+ --> crates/rhwp-ooxml-chart/tests/__external.rs:6:50
+  |
+6 | use rhwp_ooxml_chart::patch::{apply_chart_edits, write_chart_edits, WritePatchError};
+  |                                                  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^ no `WritePatchError` in `patch`
+  |                                                  |
+  |                                                  no `write_chart_edits` in `patch`
+  |
+help: a similar name exists in the module
+  |
+6 - use rhwp_ooxml_chart::patch::{apply_chart_edits, write_chart_edits, WritePatchError};
+6 + use rhwp_ooxml_chart::patch::{apply_chart_edits, apply_chart_edits, WritePatchError};
+  |
+help: a similar name exists in the module
+  |
+6 - use rhwp_ooxml_chart::patch::{apply_chart_edits, write_chart_edits, WritePatchError};
+6 + use rhwp_ooxml_chart::patch::{apply_chart_edits, write_chart_edits, PatchError};
+  |
+
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `rhwp-ooxml-chart` (test "__external") due to 1 previous error

@@ -1,0 +1,60 @@
+{
+  "build": {
+    "command": [
+      "cargo",
+      "+1.93.1",
+      "build",
+      "--offline",
+      "--locked",
+      "--target-dir",
+      "target/pr-review",
+      "--workspace"
+    ],
+    "exit_code": 0,
+    "log": "baseline-build.log"
+  },
+  "tests": {
+    "command": [
+      "cargo",
+      "+1.93.1",
+      "test",
+      "--offline",
+      "--locked",
+      "--target-dir",
+      "target/pr-review",
+      "--workspace"
+    ],
+    "exit_code": 0,
+    "log": "baseline-tests.log"
+  },
+  "clippy": {
+    "command": [
+      "cargo",
+      "+1.93.1",
+      "clippy",
+      "--offline",
+      "--locked",
+      "--target-dir",
+      "target/pr-review",
+      "--workspace",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 0,
+    "log": "baseline-clippy.log"
+  },
+  "format": {
+    "command": [
+      "cargo",
+      "+1.93.1",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0,
+    "log": "baseline-format.log"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "retrieved_at": "2026-10-23",
+  "baselines": [
+    {
+      "condition": "studentweis",
+      "repository": "StudentWeis/google-rust-style-guide",
+      "commit": "07b5b14c68d8bfc978575d347de59ca715e0deab",
+      "path": "SKILL.md",
+      "destination": "SKILL.md",
+      "sha256": "4d5154d4817cc76f8d412a37e01e781f369b7fe2080390a509f0f9f88c5c191d"
+    },
+    {
+      "condition": "studentweis",
+      "repository": "StudentWeis/google-rust-style-guide",
+      "commit": "07b5b14c68d8bfc978575d347de59ca715e0deab",
+      "path": "references/rustguide.md",
+      "destination": "references/rustguide.md",
+      "sha256": "059c6cdee4e7e5a8b756135200b2ca360de146ddaf7ca6f720f839b5dd7edfe6"
+    },
+    {
+      "condition": "studentweis",
+      "repository": "StudentWeis/google-rust-style-guide",
+      "commit": "07b5b14c68d8bfc978575d347de59ca715e0deab",
+      "path": "NOTICE.md",
+      "destination": "NOTICE.md",
+      "sha256": "f6486f8e6d5f170174f3a3c31803f215a8907e111c659bb7fd3b61dd9e69c20b"
+    },
+    {
+      "condition": "0xmassi",
+      "repository": "0xMassi/google-rust-style-skill",
+      "commit": "5d5eeca939d723f76317fc1e41276ed3bc1548d9",
+      "path": "skills/google-rust-style/SKILL.md",
+      "destination": "SKILL.md",
+      "sha256": "4ab10879b912b15ceac2b717cfd9a1c56f7c88b2bbd2006a52d0e91ef0099583"
+    }
+  ]
+}
