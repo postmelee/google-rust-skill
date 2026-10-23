@@ -65,7 +65,7 @@ overall allocation counts. Do not grade incidental wording or reward verbosity.
 
 ## Run and replay
 
-Install Python development dependencies from the root README and Rust 1.93.1
+Install Python development dependencies from the [maintainer guide](../../docs/maintaining.md#develop-and-verify) and Rust 1.93.1
 with Clippy and rustfmt. Fetch immutable sources and skill baselines:
 
 ```sh

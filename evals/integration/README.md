@@ -59,7 +59,7 @@ allowed. This initial comparison has one run per cell and no variance estimate.
 
 ## Prepare and execute
 
-Install Python development dependencies as described in the root README and
+Install Python development dependencies as described in the [maintainer guide](../../docs/maintaining.md#develop-and-verify) and
 install Rust 1.93.1 with rustfmt and Clippy. Fetch sources and baseline skills:
 
 ```sh
