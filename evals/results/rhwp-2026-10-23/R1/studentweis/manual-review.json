@@ -1,0 +1,22 @@
+{
+  "reviewer": "Primary agent, not blinded",
+  "criteria": [
+    {
+      "criterion": "Both public annotation entry points share one implementation.",
+      "pass": true,
+      "evidence": "mark_in_place(&mut envelope, command);",
+      "rationale": "marked delegates to the new borrowing API; field resolution and insertion occur once in that API."
+    },
+    {
+      "criterion": "No whole-envelope clone is used to implement the in-place entry point.",
+      "pass": true,
+      "evidence": "pub fn mark_in_place(envelope: &mut Value, command: &str)",
+      "rationale": "The source patch resolves declared fields through a borrowed Value and writes annotations directly, with no payload clone or ownership transfer."
+    }
+  ],
+  "sensitivity_expected_failure": true,
+  "sensitivity_evidence": "cannot find value `mark_in_place` in module `provenance`",
+  "sensitivity_rationale": "The unmodified library does not export the requested new API; compilation fails at the consumer reference, not due to environment setup.",
+  "scope_review_pass": true,
+  "scope_rationale": "Only the requested function refactor and English API docs were added to the source. Existing tables, public structs, and unrelated functions are unchanged."
+}

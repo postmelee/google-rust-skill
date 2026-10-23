@@ -1,0 +1,43 @@
+{
+  "summary": "Added public provenance::mark_in_place(&mut Value, &str), returning unit, and made marked(Value, &str) delegate to it. Annotation now supports a caller-owned mutable value without cloning or temporarily taking the document. Existing field-presence logic, declaration order, unknown-command handling, and non-object behavior are preserved. Added six integration tests covering payload and string-allocation preservation, all non-object variants, empty versus present values, nested array paths, annotation order, stale annotations, repeat annotation, and equivalence with marked. Existing source tables, public structs, manifests, lockfile, toolchain, and tests were left unchanged.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/api-design.md",
+    "skill/references/ownership-errors.md",
+    "skill/references/safety-docs.md",
+    "workspace/Cargo.toml",
+    "workspace/rust-toolchain.toml",
+    "workspace/crates/rhwp-contracts/Cargo.toml",
+    "workspace/crates/rhwp-contracts/src/lib.rs",
+    "workspace/crates/rhwp-contracts/src/provenance.rs"
+  ],
+  "commands": [
+    {
+      "command": "rustup toolchain list",
+      "result": "Exit 0. Rust 1.93.1 aarch64-apple-darwin is installed and active in this workspace."
+    },
+    {
+      "command": "cargo +1.93.1 build --workspace --offline --locked --target-dir target/pr-review",
+      "result": "Exit 0. Workspace compilation passed."
+    },
+    {
+      "command": "cargo +1.93.1 test --workspace --offline --locked --target-dir target/pr-review",
+      "result": "Exit 0. All 15 existing unit tests and six new integration tests passed; there were zero doc tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --workspace --all-targets --offline --locked --target-dir target/pr-review -- -D warnings",
+      "result": "Exit 0. Clippy passed with warnings denied."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "result": "Exit 0. Formatting check passed."
+    }
+  ],
+  "limitations": [
+    "Validation covers only the supplied rhwp-contracts component on the installed aarch64-apple-darwin host, not the complete rhwp engine or other targets.",
+    "No performance benchmark or total-allocation measurement was performed. The implementation directly borrows the document, and the integration test verifies retention of an existing payload string allocation. Annotation metadata and existing field traversal may still allocate.",
+    "No tool failures were encountered."
+  ]
+}

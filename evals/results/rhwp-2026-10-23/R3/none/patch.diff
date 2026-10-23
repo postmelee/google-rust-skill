@@ -1,0 +1,122 @@
+--- a/crates/rhwp-contracts/src/schema_registry.rs
++++ b/crates/rhwp-contracts/src/schema_registry.rs
+@@ -122,6 +122,17 @@
+     registry_value_with_crate_version(crate_version())
+ }
+ 
++/// Writes the registry as compact JSON without a trailing newline or flushing.
++///
++/// Serialization and I/O errors are returned unchanged. On failure, the writer
++/// may already contain a partial registry.
++pub fn write_registry<W: std::io::Write + ?Sized>(
++    writer: &mut W,
++    crate_version: &str,
++) -> Result<(), serde_json::Error> {
++    serde_json::to_writer(writer, &registry_value_with_crate_version(crate_version))
++}
++
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+--- /dev/null
++++ b/crates/rhwp-contracts/tests/write_registry.rs
+@@ -0,0 +1,99 @@
++use std::io::{self, Write};
++
++use rhwp_contracts::schema_registry::{registry_value_with_crate_version, write_registry};
++
++#[test]
++fn writes_exact_compact_registry_for_borrowed_versions() {
++    for version in ["1.2.3", "", "release-\"quoted\"\\path\n한글"] {
++        let owned_version = version.to_owned();
++        let mut output = Vec::new();
++
++        write_registry(&mut output, &owned_version).expect("registry should serialize");
++
++        let expected = serde_json::to_vec(&registry_value_with_crate_version(&owned_version))
++            .expect("registry should serialize");
++        assert_eq!(output, expected);
++    }
++}
++
++struct ShortWriter {
++    bytes: Vec<u8>,
++    flush_calls: usize,
++}
++
++impl Write for ShortWriter {
++    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
++        let count = bytes.len().min(3);
++        self.bytes.extend_from_slice(&bytes[..count]);
++        Ok(count)
++    }
++
++    fn flush(&mut self) -> io::Result<()> {
++        self.flush_calls += 1;
++        Ok(())
++    }
++}
++
++#[test]
++fn accepts_a_dynamic_writer_and_handles_short_writes_without_flushing() {
++    let prefix = b"existing sink contents:";
++    let mut sink = ShortWriter {
++        bytes: prefix.to_vec(),
++        flush_calls: 0,
++    };
++    let writer: &mut dyn Write = &mut sink;
++
++    write_registry(writer, "2.0.0").expect("short writes should be retried");
++
++    let mut expected = prefix.to_vec();
++    expected.extend(
++        serde_json::to_vec(&registry_value_with_crate_version("2.0.0"))
++            .expect("registry should serialize"),
++    );
++    assert_eq!(sink.bytes, expected);
++    assert_eq!(sink.flush_calls, 0);
++}
++
++struct FailingWriter {
++    bytes: Vec<u8>,
++    remaining: usize,
++    flush_calls: usize,
++}
++
++impl Write for FailingWriter {
++    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
++        if self.remaining == 0 {
++            return Err(io::Error::new(
++                io::ErrorKind::BrokenPipe,
++                "test sink failed",
++            ));
++        }
++        let count = bytes.len().min(self.remaining);
++        self.bytes.extend_from_slice(&bytes[..count]);
++        self.remaining -= count;
++        Ok(count)
++    }
++
++    fn flush(&mut self) -> io::Result<()> {
++        self.flush_calls += 1;
++        Ok(())
++    }
++}
++
++#[test]
++fn preserves_the_io_error_kind_after_partial_output() {
++    let mut sink = FailingWriter {
++        bytes: Vec::new(),
++        remaining: 20,
++        flush_calls: 0,
++    };
++
++    let error = write_registry(&mut sink, "3.0.0").expect_err("sink should fail");
++
++    assert!(error.is_io());
++    assert_eq!(error.io_error_kind(), Some(io::ErrorKind::BrokenPipe));
++    let expected = serde_json::to_vec(&registry_value_with_crate_version("3.0.0"))
++        .expect("registry should serialize");
++    assert_eq!(sink.bytes, expected[..20]);
++    assert_eq!(sink.flush_calls, 0);
++}

@@ -1,0 +1,198 @@
+--- a/crates/rhwp-contracts/src/provenance.rs
++++ b/crates/rhwp-contracts/src/provenance.rs
+@@ -753,13 +753,22 @@
+ /// `jsonContract.schemaPolicy`("필드 추가 허용")가 허용하는 변경이라
+ /// `schemaVersion` 을 올리지 않는다.
+ pub fn marked(mut envelope: Value, command: &str) -> Value {
++    mark_in_place(&mut envelope, command);
++    envelope
++}
++
++/// Annotates an object with the document-derived fields present for `command`.
++///
++/// Updates `untrustedContent` and `untrustedFields` while preserving the payload
++/// without cloning it. Unknown commands receive `false` and an empty field list.
++/// Non-object values are left unchanged.
++pub fn mark_in_place(envelope: &mut Value, command: &str) {
+     if !envelope.is_object() {
+-        return envelope;
++        return;
+     }
+-    let fields = present_fields(&envelope, command);
++    let fields = present_fields(envelope, command);
+     envelope["untrustedContent"] = json!(!fields.is_empty());
+     envelope["untrustedFields"] = json!(fields);
+-    envelope
+ }
+ 
+ /// `export-provenance-map --json` 본문.
+--- /dev/null
++++ b/crates/rhwp-contracts/tests/provenance_in_place.rs
+@@ -0,0 +1,167 @@
++use rhwp_contracts::provenance::{mark_in_place, marked};
++use serde_json::{json, Value};
++
++#[test]
++fn annotates_owned_payload_without_replacing_its_string_storage() {
++    let mut envelope = json!({
++        "title": "A document title",
++        "fonts": ["Document Font"],
++        "pageCount": 3,
++        "payload": {"text": "Document text".repeat(1024)},
++    });
++    let original = envelope.clone();
++    let text_pointer = envelope["payload"]["text"]
++        .as_str()
++        .expect("the payload contains a string")
++        .as_ptr();
++
++    let _: () = mark_in_place(&mut envelope, "info");
++
++    assert_eq!(envelope["untrustedContent"], true);
++    assert_eq!(envelope["untrustedFields"], json!(["title", "fonts[]"]));
++    assert_eq!(
++        envelope["payload"]["text"]
++            .as_str()
++            .expect("annotation must preserve the payload string")
++            .as_ptr(),
++        text_pointer,
++        "annotation must retain the existing payload allocation",
++    );
++    assert_eq!(envelope, marked(original.clone(), "info"));
++    let object = envelope.as_object_mut().expect("the envelope is an object");
++    object.remove("untrustedContent");
++    object.remove("untrustedFields");
++    assert_eq!(envelope, original);
++}
++
++#[test]
++fn leaves_every_non_object_variant_unchanged() {
++    for original in [
++        Value::Null,
++        json!(false),
++        json!(true),
++        json!(0),
++        json!(-4.5),
++        json!(""),
++        json!("document text"),
++        json!([]),
++        json!([{"title": "A nested object"}]),
++    ] {
++        let mut envelope = original.clone();
++        mark_in_place(&mut envelope, "info");
++        assert_eq!(envelope, original);
++        assert_eq!(marked(original.clone(), "info"), original);
++    }
++}
++
++#[test]
++fn preserves_field_presence_rules() {
++    for (value, present) in [
++        (Value::Null, false),
++        (json!(""), false),
++        (json!([]), false),
++        (json!({}), false),
++        (json!(false), true),
++        (json!(0), true),
++        (json!(" "), true),
++        (json!([null]), true),
++        (json!({"nested": null}), true),
++    ] {
++        let mut envelope = json!({"text": value});
++        let original = envelope.clone();
++        mark_in_place(&mut envelope, "header-footer");
++        assert_eq!(envelope["untrustedContent"], present, "input: {original}");
++        assert_eq!(
++            envelope["untrustedFields"],
++            if present { json!(["text"]) } else { json!([]) },
++            "input: {original}",
++        );
++        assert_eq!(envelope["text"], original["text"]);
++        assert_eq!(envelope, marked(original, "header-footer"));
++    }
++
++    let mut missing = json!({"exists": false});
++    mark_in_place(&mut missing, "header-footer");
++    assert_eq!(
++        missing,
++        json!({"exists": false, "untrustedContent": false, "untrustedFields": []}),
++    );
++}
++
++#[test]
++fn resolves_nested_arrays_and_keeps_declaration_order() {
++    let original = json!({
++        "tables": [
++            null,
++            {"cells": [{"nested": [{"caption": "Nested table"}]}]},
++            {"cells": [{"text": ""}, {"text": "Cell text"}]},
++            {"caption": "Table caption"},
++        ],
++    });
++    let mut envelope = original.clone();
++    mark_in_place(&mut envelope, "export-tables");
++    assert_eq!(envelope["untrustedContent"], true);
++    assert_eq!(
++        envelope["untrustedFields"],
++        json!([
++            "tables[].caption",
++            "tables[].cells[].text",
++            "tables[].cells[].nested[]",
++        ]),
++    );
++    assert_eq!(envelope["tables"], original["tables"]);
++    assert_eq!(envelope, marked(original, "export-tables"));
++
++    for tables in [
++        Value::Null,
++        json!([]),
++        json!({"caption": "An object is not an array"}),
++        json!([{"caption": "", "cells": [{"text": null, "nested": []}]}]),
++    ] {
++        let mut envelope = json!({"tables": tables});
++        mark_in_place(&mut envelope, "export-tables");
++        assert_eq!(envelope["untrustedContent"], false);
++        assert_eq!(envelope["untrustedFields"], json!([]));
++    }
++}
++
++#[test]
++fn unknown_and_trusted_commands_replace_stale_annotations() {
++    for command in ["unknown-command", "capabilities"] {
++        let original = json!({
++            "title": "Retained payload",
++            "untrustedContent": true,
++            "untrustedFields": ["stale"],
++        });
++        let mut envelope = original.clone();
++        mark_in_place(&mut envelope, command);
++        assert_eq!(
++            envelope,
++            json!({
++                "title": "Retained payload",
++                "untrustedContent": false,
++                "untrustedFields": [],
++            }),
++        );
++        assert_eq!(envelope, marked(original, command));
++    }
++}
++
++#[test]
++fn repeated_annotation_uses_the_current_payload() {
++    let mut envelope = json!({"title": "Document title", "fonts": []});
++    mark_in_place(&mut envelope, "info");
++    let once = envelope.clone();
++    mark_in_place(&mut envelope, "info");
++    assert_eq!(envelope, once);
++
++    envelope["title"] = Value::Null;
++    mark_in_place(&mut envelope, "info");
++    assert_eq!(envelope["untrustedContent"], false);
++    assert_eq!(envelope["untrustedFields"], json!([]));
++
++    envelope["fonts"] = json!([null, "", "New Font"]);
++    mark_in_place(&mut envelope, "info");
++    assert_eq!(envelope["untrustedContent"], true);
++    assert_eq!(envelope["untrustedFields"], json!(["fonts[]"]));
++}

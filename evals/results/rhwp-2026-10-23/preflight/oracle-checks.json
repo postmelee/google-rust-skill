@@ -1,0 +1,110 @@
+{
+  "R1": {
+    "before": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "test",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "-p",
+        "rhwp-contracts",
+        "--test",
+        "__external_contract"
+      ],
+      "exit_code": 101,
+      "log": "R1-before.log"
+    },
+    "author_sanity_implementation": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "test",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "-p",
+        "rhwp-contracts",
+        "--test",
+        "__external_contract"
+      ],
+      "exit_code": 0,
+      "log": "R1-sanity.log"
+    }
+  },
+  "R2": {
+    "before": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "test",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "-p",
+        "rhwp-contracts",
+        "--test",
+        "__external_contract"
+      ],
+      "exit_code": 101,
+      "log": "R2-before.log"
+    },
+    "author_sanity_implementation": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "test",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "-p",
+        "rhwp-contracts",
+        "--test",
+        "__external_contract"
+      ],
+      "exit_code": 0,
+      "log": "R2-sanity.log"
+    }
+  },
+  "R3": {
+    "before": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "test",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "-p",
+        "rhwp-contracts",
+        "--test",
+        "__external_contract"
+      ],
+      "exit_code": 101,
+      "log": "R3-before.log"
+    },
+    "author_sanity_implementation": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "test",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "-p",
+        "rhwp-contracts",
+        "--test",
+        "__external_contract"
+      ],
+      "exit_code": 0,
+      "log": "R3-sanity.log"
+    }
+  }
+}

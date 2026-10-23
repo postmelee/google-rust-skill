@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "authored_before_runs": true,
+  "gates": {
+    "scope": "Only the specified source file and new crate integration tests may change; upstream inline tests must remain byte-identical. No new unsafe blocks or suppressed checks.",
+    "build": "cargo +1.93.1 build --offline --locked --workspace",
+    "tests": "cargo +1.93.1 test --offline --locked --workspace; all 15 original tests and at least one newly added integration test execute successfully",
+    "clippy": "cargo +1.93.1 clippy --offline --locked --workspace --all-targets -- -D warnings",
+    "format": "cargo +1.93.1 fmt --all -- --check",
+    "oracle": "External consumer tests supplied only after the agent finishes must compile and pass",
+    "regression_sensitivity": "The new agent-authored integration tests must fail against the unmodified source because the requested API is absent or the requested behavior is not implemented; environment failures do not count."
+  },
+  "pass_rule": "All automated gates pass and task-specific manual criteria pass. Do not repair generated patches before grading.",
+  "manual_criteria": {
+    "R1": [
+      "Both public annotation entry points share one implementation.",
+      "No whole-envelope clone is used to implement the in-place entry point."
+    ],
+    "R2": [
+      "First occurrence is retained without rewriting accepted names or mutating inputs.",
+      "Existing public API and IR derivation remain intact."
+    ],
+    "R3": [
+      "Serialization reuses the existing registry builder, without a duplicate registry table.",
+      "Writer errors retain serde_json::Error and no explicit flush is introduced."
+    ]
+  },
+  "limitations": [
+    "No numerical score for verbosity or incidental style.",
+    "Manual source review is by the primary agent, not blinded.",
+    "One fresh session per case/condition; no repeated runs or exposed backend model identity."
+  ]
+}

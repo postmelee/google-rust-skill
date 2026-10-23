@@ -1,0 +1,137 @@
+{
+  "frozen_at_utc": "2026-10-23T06:13:25.316194+00:00",
+  "project": "edwardkim/rhwp",
+  "source_commit": "1a76570e833917d15817415a53c09ad61ab3203f",
+  "candidate_release": "v0.1.0",
+  "candidate_commit": "3f85197d7b39bd4e38406c1c36bcb1eff8e27d7b",
+  "protocol": "One fresh independent collaboration context per case and condition; implementation and self-tests followed by independent clean replay and undisclosed external consumer tests. No patch repairs by the grader.",
+  "model": "Inherited host model; exact backend identifier, sampling parameters, token counts and inference costs are not exposed. No model override.",
+  "tools": "Local source reads/edits and offline Cargo; no browsing, external writes, other packets, or delegation by evaluated agents. Isolation is procedural, not a security sandbox between agents.",
+  "scope": "Complete unmodified rhwp-contracts crate in a minimal workspace. All 12 locked package versions/checksums match the upstream lock. Full rhwp root engine, CLI, bindings, WASM and UI are excluded.",
+  "selection": "Three maintainer-designed feature/robustness tasks on real source. Not upstream issue reproductions or a blinded held-out sample. Candidate runtime unchanged from v0.1.0.",
+  "grading": "Frozen compiler/test/lint/format/scope gates plus primary-agent non-blinded source review; no semantic LLM grader.",
+  "software": {
+    "rust": "rustc 1.93.1 (01f6ddf75 2026-02-11)",
+    "cargo": "cargo 1.93.1 (083ac5135 2025-12-15)",
+    "host": "Darwin arm64"
+  },
+  "frozen_inputs_sha256": {
+    "evals/integration/cases.json": "645fd7c8dd6c9c09eac85c4614fd82b10ca63a1a178465b910fb0f5e85f3c21d",
+    "evals/integration/rubric.json": "8ef7f7b5fea2817dc5e8c1fac8b48995ad84f2bd314eb13acf92c55691078336",
+    "provenance/rhwp.json": "8784120e953fad2fe4be63aa7ab1cafe100947bfdf52a4eed4963d7056eb0dc9",
+    "provenance/baselines.json": "e1d5b892b1f6527bc90f9f25d29b89d39dc0c88864b41216802d305bd574a4c8",
+    "scripts/rhwp_eval.py": "faaf9af867b5f227e4014986071f283646a5572fee6996142726f22de16a1fbf",
+    "evals/integration/oracles/R1.rs": "bf83c47c6f89439bd1096ae1ff446722364bdfa1c737d636885a6e8bb1ed5a37",
+    "evals/integration/oracles/R2.rs": "88e16cf66252c2f724fdc69fa930f0a23b72b0579d3ce4f8e1168d0f8fc3743f",
+    "evals/integration/oracles/R3.rs": "cd115c7085968890d95aa03104af5e23665a756c77696e8632b929c39be8f9dc",
+    "evals/integration/workspace/Cargo.lock": "617c200eb96bd802311bb6481d83f91526e0b7c3e49cb2143117a3ae8dbc2c6a",
+    "evals/integration/workspace/Cargo.toml": "971c408b68399b2dc473d45cc0fe8a679d7356b89e4a34d5c39a9b543cd33a7b"
+  },
+  "conditions_manifest_sha256": "9949c8e73aa9b1897cef820058edfb0b467d9b679925a141fdecff4135686451",
+  "runs": [
+    {
+      "id": "R1-none",
+      "case": "R1",
+      "condition": "none",
+      "repetition": 1,
+      "packet_manifest_sha256": "a144b85134ca9a81f042a62fa0608f784c83699e3fb8d43128f5cc702e2ae33f"
+    },
+    {
+      "id": "R1-studentweis",
+      "case": "R1",
+      "condition": "studentweis",
+      "repetition": 1,
+      "packet_manifest_sha256": "8373406d807d649b2dac22a0ae58892aa739ca480cf5ed2bb09974a5bd986cb9"
+    },
+    {
+      "id": "R1-candidate",
+      "case": "R1",
+      "condition": "candidate",
+      "repetition": 1,
+      "packet_manifest_sha256": "47bff0b9bdc335ac6c14719065570f5a4e079aa20df1588169ca881d3a8a8531"
+    },
+    {
+      "id": "R1-0xmassi",
+      "case": "R1",
+      "condition": "0xmassi",
+      "repetition": 1,
+      "packet_manifest_sha256": "0d15e658d7202c07443dd95b55f2384712b8d7b3a550ab212d30eeff84d4c368"
+    },
+    {
+      "id": "R2-0xmassi",
+      "case": "R2",
+      "condition": "0xmassi",
+      "repetition": 1,
+      "packet_manifest_sha256": "ebd9cda88a5b3ab77d255cd9e9978fa44afb3314e9873e12af1808207deb5e2b"
+    },
+    {
+      "id": "R2-candidate",
+      "case": "R2",
+      "condition": "candidate",
+      "repetition": 1,
+      "packet_manifest_sha256": "77e182fcf6a54633ce701e379ee3984799b2b9bd937989df66462e0ffaa47c4b"
+    },
+    {
+      "id": "R2-none",
+      "case": "R2",
+      "condition": "none",
+      "repetition": 1,
+      "packet_manifest_sha256": "091f63ba20d5abe83b1c0fc0c4115acd110079f36701f058d91df18ce43f1f21"
+    },
+    {
+      "id": "R2-studentweis",
+      "case": "R2",
+      "condition": "studentweis",
+      "repetition": 1,
+      "packet_manifest_sha256": "d3d8599482f679893ca3684f9a04d1fc079acd3cdfc7e0261c90339830e8e3b3"
+    },
+    {
+      "id": "R3-studentweis",
+      "case": "R3",
+      "condition": "studentweis",
+      "repetition": 1,
+      "packet_manifest_sha256": "a567a73a1bb284dea13ab9cc063df47b97b0b6e8b34f86b9aefc82c12ca6f12b"
+    },
+    {
+      "id": "R3-none",
+      "case": "R3",
+      "condition": "none",
+      "repetition": 1,
+      "packet_manifest_sha256": "2166bdd8690272d8d30e4aa955c22a16ed244e8c6edd7faef0396809c10cbe3a"
+    },
+    {
+      "id": "R3-0xmassi",
+      "case": "R3",
+      "condition": "0xmassi",
+      "repetition": 1,
+      "packet_manifest_sha256": "75dfe06d2b2f7c3679009d8f52c5873e544748fce290057da67c4876e6788c2b"
+    },
+    {
+      "id": "R3-candidate",
+      "case": "R3",
+      "condition": "candidate",
+      "repetition": 1,
+      "packet_manifest_sha256": "a38193256baa5f880e7ca54559ae3792b5e0c358ab7a2f04914fd06674a5ada4"
+    }
+  ],
+  "limitations": [
+    "One run per cell, no repetition or statistical significance.",
+    "Run order is predeclared and rotated, not randomized.",
+    "Three tasks in one small crate do not measure engine-scale refactoring or every Rust pattern.",
+    "Existing Korean source and contract strings are preserved. New evaluation prose is English.",
+    "Source excerpts in patches retain rhwp MIT attribution in LICENSES/rhwp-MIT.txt."
+  ],
+  "assessment_implementation_sha256": "717f274e5318f8c5578f862db82a67384a3849a7ce6480d4c49cd233631142fe",
+  "method_amendments": [
+    {
+      "at_utc": "2026-10-23T06:16:17.980365+00:00",
+      "stage": "Before any completed agent output was inspected or assessed; first three implementation sessions were in progress.",
+      "change": "Corrected diff provenance for forbidden root workspace/lockfile edits and handled a deleted source file as a scope failure.",
+      "criteria_changed": false,
+      "packets_changed": false,
+      "previous_runner_retained": "frozen/scripts/rhwp_eval.py",
+      "assessment_runner": "frozen/assessment-runner.py"
+    }
+  ],
+  "publication_normalization": "Host-specific evaluation-repository paths and canonical temporary-workspace prefixes in result JSON/logs are normalized. Input/output manifests, patches, diagnostics and substantive response text are unchanged. Pre-normalization captures are retained in the local ignored cache."
+}

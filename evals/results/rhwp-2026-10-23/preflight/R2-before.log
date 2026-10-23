@@ -1,0 +1,38 @@
+
+running 2 tests
+test invalid_names_are_skipped_but_valid_bytes_are_not_normalized ... FAILED
+test first_valid_payload_wins_in_each_namespace ... FAILED
+
+failures:
+
+---- invalid_names_are_skipped_but_valid_bytes_are_not_normalized stdout ----
+
+thread 'invalid_names_are_skipped_but_valid_bytes_are_not_normalized' (126212) panicked at crates/rhwp-contracts/tests/__external_contract.rs:46:5:
+assertion `left == right` failed
+  left: ["", " \t\n", "\u{2003}", "x", "X", " x ", "한글", "x", "", " \t\n", "\u{2003}", "x", "X", " x ", "한글", "x"]
+ right: ["x", "X", " x ", "한글", "x", "X", " x ", "한글"]
+
+---- first_valid_payload_wins_in_each_namespace stdout ----
+
+thread 'first_valid_payload_wins_in_each_namespace' (126211) panicked at crates/rhwp-contracts/tests/__external_contract.rs:24:5:
+assertion `left == right` failed
+  left: ["rhwp:cmd/info", "rhwp:cmd/info", "rhwp:cmd/other", "rhwp:tool/info", "rhwp:tool/info", "rhwp:tool/other"]
+ right: ["rhwp:cmd/info", "rhwp:cmd/other", "rhwp:tool/info", "rhwp:tool/other"]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    first_valid_payload_wins_in_each_namespace
+    invalid_names_are_skipped_but_valid_bytes_are_not_normalized
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde_json v1.0.151
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.3
+   Compiling rhwp-contracts v0.1.0 (<workspace>/crates/rhwp-contracts)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.85s
+     Running tests/__external_contract.rs (target/pr-review/debug/deps/__external_contract-091446ccec3facd8)
+error: test failed, to rerun pass `-p rhwp-contracts --test __external_contract`

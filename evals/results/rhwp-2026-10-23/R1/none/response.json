@@ -1,0 +1,55 @@
+{
+  "summary": "Added public provenance::mark_in_place(&mut Value, &str), returning (), and made marked(Value, &str) delegate to the same annotation logic. Objects retain their payload while provenance annotations are refreshed; non-objects remain unchanged. Existing field-presence rules, declaration order, source tables, and unknown-command behavior are preserved. Added six integration tests covering borrowed mutation, retained payload allocations, every JSON value category, nested arrays, declaration order, invalid container shapes, annotation replacement, idempotence, and parity with marked. All 15 existing tests and six new tests pass. Only provenance.rs and the new integration test file were changed in the source workspace.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "workspace/crates/rhwp-contracts/src/provenance.rs",
+    "workspace/crates/rhwp-contracts/src/lib.rs",
+    "workspace/crates/rhwp-contracts/Cargo.toml",
+    "workspace/Cargo.toml",
+    "workspace/rust-toolchain.toml",
+    "workspace/Cargo.lock",
+    "workspace/crates/rhwp-contracts/src/ir_schema.rs",
+    "workspace/crates/rhwp-contracts/src/ontology.rs",
+    "workspace/crates/rhwp-contracts/src/schema_registry.rs"
+  ],
+  "commands": [
+    {
+      "command": "rustc +1.93.1 --version",
+      "result": "Passed, exit 0: rustc 1.93.1 (01f6ddf75 2026-02-11)."
+    },
+    {
+      "command": "cargo +1.93.1 --version",
+      "result": "Passed, exit 0: cargo 1.93.1 (083ac5135 2025-12-15)."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "result": "Initial run exited 1, requesting two assertion line-wrap changes in the new integration test. Both formatting issues were fixed without changing existing files."
+    },
+    {
+      "command": "cargo +1.93.1 build --workspace --offline --locked --target-dir target/pr-review",
+      "result": "Passed, exit 0."
+    },
+    {
+      "command": "cargo +1.93.1 test --workspace --offline --locked --target-dir target/pr-review",
+      "result": "Passed, exit 0: 15 existing unit tests, six new integration tests, and zero doc tests; no failed or ignored tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --workspace --all-targets --offline --locked --target-dir target/pr-review -- -D warnings",
+      "result": "Passed, exit 0."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "result": "Final run passed, exit 0."
+    },
+    {
+      "command": "shasum -a 256 Cargo.toml Cargo.lock rust-toolchain.toml crates/rhwp-contracts/Cargo.toml crates/rhwp-contracts/src/*.rs",
+      "result": "Passed before and after implementation. Hashes confirm the manifests, lockfile, toolchain configuration, and every existing Rust source file except provenance.rs are unchanged. Files listed only for hashing were not inspected for implementation guidance."
+    }
+  ],
+  "limitations": [
+    "Validation covers the supplied rhwp-contracts component, not the whole rhwp engine or downstream applications.",
+    "No performance benchmark or allocation profiler was run. Integration tests verify retention of selected existing string allocations; the implementation directly borrows the existing Value and contains no payload clone or ownership transfer.",
+    "No host or dependency failures blocked the required commands."
+  ]
+}

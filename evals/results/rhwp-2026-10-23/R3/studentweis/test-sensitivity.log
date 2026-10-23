@@ -1,0 +1,28 @@
+   Compiling rhwp-contracts v0.1.0 (<workspace>/crates/rhwp-contracts)
+error[E0425]: cannot find function `write_registry` in module `schema_registry`
+  --> crates/rhwp-contracts/tests/schema_registry_writer.rs:12:26
+   |
+12 |         schema_registry::write_registry(&mut output, &owned_version)
+   |                          ^^^^^^^^^^^^^^ not found in `schema_registry`
+
+error[E0425]: cannot find function `write_registry` in module `schema_registry`
+  --> crates/rhwp-contracts/tests/schema_registry_writer.rs:52:26
+   |
+52 |         schema_registry::write_registry(sink, version).expect("short writes must be retried");
+   |                          ^^^^^^^^^^^^^^ not found in `schema_registry`
+
+error[E0425]: cannot find function `write_registry` in module `schema_registry`
+   --> crates/rhwp-contracts/tests/schema_registry_writer.rs:101:42
+    |
+101 |             let error = schema_registry::write_registry(&mut writer, version)
+    |                                          ^^^^^^^^^^^^^^ not found in `schema_registry`
+
+error[E0425]: cannot find function `write_registry` in module `schema_registry`
+   --> crates/rhwp-contracts/tests/schema_registry_writer.rs:116:34
+    |
+116 |     let error = schema_registry::write_registry(&mut writer, "4.0.0")
+    |                                  ^^^^^^^^^^^^^^ not found in `schema_registry`
+
+For more information about this error, try `rustc --explain E0425`.
+error: could not compile `rhwp-contracts` (test "schema_registry_writer") due to 4 previous errors
+warning: build failed, waiting for other jobs to finish...

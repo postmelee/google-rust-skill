@@ -1,0 +1,22 @@
+{
+  "reviewer": "Primary agent, not blinded",
+  "criteria": [
+    {
+      "criterion": "First occurrence is retained without rewriting accepted names or mutating inputs.",
+      "pass": true,
+      "evidence": "if name.trim().is_empty() || !seen_names.insert(name)",
+      "rationale": "Whitespace is used only to detect blank names; borrowed original names are membership keys. Each loop retains its original iteration order and pushes only the first accepted entry."
+    },
+    {
+      "criterion": "Existing public API and IR derivation remain intact.",
+      "pass": true,
+      "evidence": "fn push_tool_nodes(graph: &mut Vec<Value>, tools: &[Value])",
+      "rationale": "The source diff only imports HashSet and adds membership checks inside the private command/tool loops. Public APIs, metadata copying, IR derivation and count calculation are unchanged."
+    }
+  ],
+  "sensitivity_expected_failure": true,
+  "sensitivity_evidence": "duplicate_catalogs_retain_first_metadata_and_order",
+  "sensitivity_rationale": "Original tests still pass; the new duplicate/name contracts fail assertions on the unmodified source. Build environment is functional.",
+  "scope_review_pass": true,
+  "scope_rationale": "Only ontology.rs and new integration tests changed; no suppression, unsafe code, API migrations or configuration edits."
+}

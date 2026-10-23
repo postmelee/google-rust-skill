@@ -1,0 +1,189 @@
+--- a/crates/rhwp-contracts/src/provenance.rs
++++ b/crates/rhwp-contracts/src/provenance.rs
+@@ -753,13 +753,23 @@
+ /// `jsonContract.schemaPolicy`("필드 추가 허용")가 허용하는 변경이라
+ /// `schemaVersion` 을 올리지 않는다.
+ pub fn marked(mut envelope: Value, command: &str) -> Value {
++    mark_in_place(&mut envelope, command);
++    envelope
++}
++
++/// Updates an object's provenance annotations without cloning its payload.
++///
++/// Non-object values are unchanged. Objects receive `untrustedContent` and
++/// `untrustedFields`, replacing any existing annotations. Only declared fields
++/// that carry values are included, in declaration order; unknown commands
++/// receive `false` and an empty field list.
++pub fn mark_in_place(envelope: &mut Value, command: &str) {
+     if !envelope.is_object() {
+-        return envelope;
++        return;
+     }
+-    let fields = present_fields(&envelope, command);
++    let fields = present_fields(envelope, command);
+     envelope["untrustedContent"] = json!(!fields.is_empty());
+     envelope["untrustedFields"] = json!(fields);
+-    envelope
+ }
+ 
+ /// `export-provenance-map --json` 본문.
+--- /dev/null
++++ b/crates/rhwp-contracts/tests/provenance_in_place.rs
+@@ -0,0 +1,157 @@
++use rhwp_contracts::provenance;
++use serde_json::{json, Value};
++
++fn assert_annotations(mut envelope: Value, command: &str, fields: &[&str]) {
++    let mut expected = envelope.clone();
++    expected["untrustedContent"] = json!(!fields.is_empty());
++    expected["untrustedFields"] = json!(fields);
++
++    assert_eq!(
++        provenance::marked(envelope.clone(), command),
++        expected,
++        "The ownership-taking API must preserve the contract for {command}"
++    );
++    let mark: fn(&mut Value, &str) = provenance::mark_in_place;
++    mark(&mut envelope, command);
++    assert_eq!(
++        envelope, expected,
++        "The in-place API must preserve the payload and annotate {command}"
++    );
++}
++
++#[test]
++fn annotates_a_borrowed_child_without_copying_its_payload() {
++    let mut document = json!({
++        "envelope": {"title": "Document title".repeat(1024), "pageCount": 3},
++        "sibling": {"keep": [1, 2, 3]}
++    });
++    let title = document["envelope"]["title"]
++        .as_str()
++        .expect("The fixture title is a string")
++        .as_ptr();
++
++    provenance::mark_in_place(&mut document["envelope"], "info");
++
++    assert_eq!(document["envelope"]["untrustedContent"], true);
++    assert_eq!(document["envelope"]["untrustedFields"], json!(["title"]));
++    assert_eq!(document["envelope"]["pageCount"], 3);
++    assert_eq!(document["sibling"], json!({"keep": [1, 2, 3]}));
++    assert_eq!(
++        document["envelope"]["title"]
++            .as_str()
++            .expect("The title must remain a string")
++            .as_ptr(),
++        title,
++        "Annotating must retain the existing title allocation"
++    );
++}
++
++#[test]
++fn non_objects_are_unchanged() {
++    for mut value in [
++        Value::Null,
++        json!(false),
++        json!(0),
++        json!(1.5),
++        json!("document text"),
++        json!([]),
++        json!([{"title": "Nested title"}]),
++    ] {
++        let expected = value.clone();
++        provenance::mark_in_place(&mut value, "info");
++        assert_eq!(value, expected, "Non-object input must remain unchanged");
++        assert_eq!(provenance::marked(value, "info"), expected);
++    }
++}
++
++#[test]
++fn scalar_field_presence_preserves_empty_and_nonempty_rules() {
++    assert_annotations(json!({}), "form-value", &[]);
++    for value in [Value::Null, json!(""), json!([]), json!({})] {
++        assert_annotations(json!({"value": value}), "form-value", &[]);
++    }
++    for value in [
++        json!(false),
++        json!(0),
++        json!(" "),
++        json!([null]),
++        json!({"empty": null}),
++    ] {
++        assert_annotations(json!({"value": value}), "form-value", &["value"]);
++    }
++}
++
++#[test]
++fn annotations_follow_declaration_order() {
++    assert_annotations(
++        json!({"caption": "Caption", "text": "Text", "value": 0, "name": "Name"}),
++        "form-value",
++        &["name", "value", "text", "caption"],
++    );
++    assert_annotations(
++        json!({"caption": "Caption", "text": "", "value": false, "name": null}),
++        "form-value",
++        &["value", "caption"],
++    );
++}
++
++#[test]
++fn array_paths_require_a_present_value_in_any_element() {
++    for matches in [
++        Value::Null,
++        json!([]),
++        json!({"text": "Wrong container type"}),
++        json!([null, {}, {"text": "", "context": null}]),
++    ] {
++        assert_annotations(json!({"matches": matches}), "search", &[]);
++    }
++    assert_annotations(
++        json!({"matches": [{"context": "Context"}, {}, {"text": "Text"}]}),
++        "search",
++        &["matches[].text", "matches[].context"],
++    );
++    assert_annotations(
++        json!({"textSecurity": {"findings": [
++            {"names": [null, ""]}, {"names": ["Field name"]}
++        ]}}),
++        "fields",
++        &["textSecurity.findings[].names[]"],
++    );
++}
++
++#[test]
++fn unknown_and_trusted_commands_replace_stale_annotations() {
++    for command in ["unknown-command", "word-count"] {
++        assert_annotations(
++            json!({
++                "title": "Retained document title",
++                "untrustedContent": true,
++                "untrustedFields": ["stale.field"]
++            }),
++            command,
++            &[],
++        );
++    }
++}
++
++#[test]
++fn repeated_annotation_refreshes_fields_after_payload_changes() {
++    let mut envelope = json!({"title": "Title", "fonts": ["Font"]});
++    provenance::mark_in_place(&mut envelope, "info");
++    let annotated = envelope.clone();
++    provenance::mark_in_place(&mut envelope, "info");
++    assert_eq!(envelope, annotated, "Annotation must be idempotent");
++
++    envelope["title"] = Value::Null;
++    envelope["fonts"] = json!([]);
++    provenance::mark_in_place(&mut envelope, "info");
++    assert_eq!(
++        envelope,
++        json!({
++            "title": null,
++            "fonts": [],
++            "untrustedContent": false,
++            "untrustedFields": []
++        })
++    );
++}

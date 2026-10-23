@@ -1,0 +1,50 @@
+{
+  "summary": "Added public provenance::mark_in_place(&mut Value, &str), returning (), with annotation logic shared by the existing marked(Value, &str) API. The implementation borrows the existing payload, retains field-presence rules and declaration order, annotates unknown commands with false and an empty list, and leaves non-objects unchanged. Added eight integration tests covering payload allocation retention, field-presence edge cases, nested arrays, declaration order, repeated annotations, unknown and fieldless commands, non-objects, and agreement between the two entry points. Only provenance.rs and the new integration test file were changed.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "workspace/Cargo.toml",
+    "workspace/rust-toolchain.toml",
+    "workspace/crates/rhwp-contracts/Cargo.toml",
+    "workspace/crates/rhwp-contracts/src/lib.rs",
+    "workspace/crates/rhwp-contracts/src/provenance.rs",
+    "workspace/crates/rhwp-contracts/src/ir_schema.rs",
+    "workspace/crates/rhwp-contracts/src/ontology.rs",
+    "workspace/crates/rhwp-contracts/src/schema_registry.rs"
+  ],
+  "commands": [
+    {
+      "command": "rustup toolchain list",
+      "result": "Exit 0. Rust 1.93.1-aarch64-apple-darwin is installed and active in the workspace."
+    },
+    {
+      "command": "cargo +1.93.1 build --workspace --offline --locked --target-dir target/pr-review",
+      "result": "Exit 0. Workspace compilation succeeded using cached dependencies."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "result": "Initial run exited 1 with two line-wrapping differences in the new integration tests; no existing files required formatting changes."
+    },
+    {
+      "command": "rustup run 1.93.1 rustfmt --edition 2021 crates/rhwp-contracts/tests/provenance_in_place.rs",
+      "result": "Exit 0. Formatted the new integration test file."
+    },
+    {
+      "command": "cargo +1.93.1 test --workspace --offline --locked --target-dir target/pr-review",
+      "result": "Exit 0. All 15 existing unit tests and all 8 new integration tests passed; 0 doc tests were present."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --workspace --all-targets --offline --locked --target-dir target/pr-review -- -D warnings",
+      "result": "Exit 0. No warnings or errors."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "result": "Final run exited 0. Formatting is clean."
+    }
+  ],
+  "limitations": [
+    "Validation was performed on the supplied isolated rhwp-contracts workspace with Rust 1.93.1 on aarch64-apple-darwin; the whole rhwp engine and other platforms were not evaluated.",
+    "No implementation or test failures remain. The initial formatting-check failure is recorded above and was corrected."
+  ]
+}

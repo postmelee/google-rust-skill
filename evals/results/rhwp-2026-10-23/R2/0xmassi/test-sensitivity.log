@@ -1,0 +1,70 @@
+
+running 15 tests
+test ir_schema::tests::schema_has_document_root_and_defs ... ok
+test ir_schema::tests::envelope_reports_definition_count ... ok
+test ir_schema::tests::definitions_are_reachable_from_root ... ok
+test schema_registry::tests::policy_path_points_to_existing_document ... ok
+test ir_schema::tests::objects_allow_additional_properties ... ok
+test schema_registry::tests::registry_value_carries_all_axes_and_crate_version ... ok
+test ontology::tests::control_variants_are_subclasses_of_control ... ok
+test ir_schema::tests::every_ref_resolves_to_a_definition ... ok
+test ontology::tests::node_ids_are_unique ... ok
+test ontology::tests::property_domains_point_at_existing_classes ... ok
+test ontology::tests::envelope_counts_match_graph ... ok
+test ontology::tests::commands_become_actions_with_trust_predicates ... ok
+test ontology::tests::tool_annotations_are_carried_when_present ... ok
+test ontology::tests::tools_become_actions_linked_to_commands ... ok
+test ontology::tests::graph_covers_every_ir_definition_as_class ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 4 tests
+test command_duplicates_keep_first_metadata_and_order ... FAILED
+test tool_duplicates_keep_first_metadata_and_order ... FAILED
+test absent_or_invalid_catalogs_have_no_actions ... FAILED
+test names_are_validated_without_normalizing_or_sharing_namespaces ... FAILED
+
+failures:
+
+---- command_duplicates_keep_first_metadata_and_order stdout ----
+
+thread 'command_duplicates_keep_first_metadata_and_order' (179022) panicked at crates/rhwp-contracts/tests/ontology_unique_actions.rs:39:5:
+assertion `left == right` failed
+  left: 4
+ right: 2
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- tool_duplicates_keep_first_metadata_and_order stdout ----
+
+thread 'tool_duplicates_keep_first_metadata_and_order' (179024) panicked at crates/rhwp-contracts/tests/ontology_unique_actions.rs:91:5:
+assertion `left == right` failed
+  left: [Object {"@id": String("rhwp:tool/reader"), "@type": Array [String("rhwp:Action"), String("schema:Action")], "rdfs:comment": String("First tool description"), "rdfs:label": String("reader"), "rhwp:annotations": Object {"custom": Object {"nested": Array [Number(1), Bool(false)]}, "readOnlyHint": Bool(true)}, "rhwp:implementsCommand": Object {"@id": String("rhwp:cmd/info")}, "rhwp:inputProperties": Array [String("format"), String("path")], "rhwp:outputFields": Array [String("title")], "rhwp:requiredInputs": Array [String("path")]}, Object {"@id": String("rhwp:tool/bare"), "@type": Array [String("rhwp:Action"), String("schema:Action")], "rdfs:label": String("bare")}, Object {"@id": String("rhwp:tool/reader"), "@type": Array [String("rhwp:Action"), String("schema:Action")], "rdfs:comment": String("Replacement"), "rdfs:label": String("reader"), "rhwp:annotations": Object {"readOnlyHint": Bool(false)}, "rhwp:implementsCommand": Object {"@id": String("rhwp:cmd/dump")}, "rhwp:inputProperties": Array [String("replacement")], "rhwp:outputFields": Array [], "rhwp:requiredInputs": Array []}, Object {"@id": String("rhwp:tool/bare"), "@type": Array [String("rhwp:Action"), String("schema:Action")], "rdfs:comment": String("Should not be merged"), "rdfs:label": String("bare")}]
+ right: [Object {"@id": String("rhwp:tool/reader"), "@type": Array [String("rhwp:Action"), String("schema:Action")], "rdfs:comment": String("First tool description"), "rdfs:label": String("reader"), "rhwp:annotations": Object {"custom": Object {"nested": Array [Number(1), Bool(false)]}, "readOnlyHint": Bool(true)}, "rhwp:implementsCommand": Object {"@id": String("rhwp:cmd/info")}, "rhwp:inputProperties": Array [String("format"), String("path")], "rhwp:outputFields": Array [String("title")], "rhwp:requiredInputs": Array [String("path")]}, Object {"@id": String("rhwp:tool/bare"), "@type": Array [String("rhwp:Action"), String("schema:Action")], "rdfs:label": String("bare")}]
+
+---- absent_or_invalid_catalogs_have_no_actions stdout ----
+
+thread 'absent_or_invalid_catalogs_have_no_actions' (179021) panicked at crates/rhwp-contracts/tests/ontology_unique_actions.rs:186:9:
+assertion failed: actions(&envelope["ontology"]).is_empty()
+
+---- names_are_validated_without_normalizing_or_sharing_namespaces stdout ----
+
+thread 'names_are_validated_without_normalizing_or_sharing_namespaces' (179023) panicked at crates/rhwp-contracts/tests/ontology_unique_actions.rs:144:5:
+assertion `left == right` failed
+  left: 34
+ right: 14
+
+
+failures:
+    absent_or_invalid_catalogs_have_no_actions
+    command_duplicates_keep_first_metadata_and_order
+    names_are_validated_without_normalizing_or_sharing_namespaces
+    tool_duplicates_keep_first_metadata_and_order
+
+test result: FAILED. 0 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+   Compiling rhwp-contracts v0.1.0 (<workspace>/crates/rhwp-contracts)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.36s
+     Running unittests src/lib.rs (target/pr-review/debug/deps/rhwp_contracts-eecfbab393234104)
+     Running tests/ontology_unique_actions.rs (target/pr-review/debug/deps/ontology_unique_actions-737628b2caad059d)
+error: test failed, to rerun pass `-p rhwp-contracts --test ontology_unique_actions`

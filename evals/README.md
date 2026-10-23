@@ -64,6 +64,12 @@ The [2026-10-23 pilot](results/2026-10-23/REPORT.md) is a static review task.
 It does not test agent-generated patches with a compiler. The repository separately
 compiles its input fixtures to ensure they are parsable.
 
+The separate [rhwp implementation suite](integration/README.md) adds three tasks
+on the complete `rhwp-contracts` crate. Each condition edits code in a fresh
+context, runs Cargo, and submits a patch for independent compilation, existing
+tests, external consumer tests, and regression-sensitivity checks. Its results
+are recorded separately in the [implementation comparison report](results/rhwp-2026-10-23/REPORT.md).
+
 Entrypoint UTF-8 bytes and whole-reference file sizes are reproducible packaging
 measurements. They are not token counts or evidence that a model loaded every
 byte. references_read is agent-reported, not a captured tool trace.

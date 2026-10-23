@@ -1,0 +1,10 @@
+   Compiling rhwp-contracts v0.1.0 (<workspace>/crates/rhwp-contracts)
+error[E0432]: unresolved import `rhwp_contracts::schema_registry::write_registry`
+ --> crates/rhwp-contracts/tests/schema_registry_writer.rs:3:74
+  |
+3 | use rhwp_contracts::schema_registry::{registry_value_with_crate_version, write_registry};
+  |                                                                          ^^^^^^^^^^^^^^ no `write_registry` in `schema_registry`
+
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `rhwp-contracts` (test "schema_registry_writer") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

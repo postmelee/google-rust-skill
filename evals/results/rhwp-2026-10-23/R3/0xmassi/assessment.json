@@ -1,0 +1,114 @@
+{
+  "case": "R3",
+  "changed_files": [
+    "crates/rhwp-contracts/src/schema_registry.rs",
+    "crates/rhwp-contracts/tests/schema_registry_writer.rs"
+  ],
+  "scope_errors": [],
+  "commands": {
+    "patch_check": {
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "<evaluation-repository>/evals/results/rhwp-2026-10-23/R3/0xmassi/patch.diff"
+      ],
+      "exit_code": 0,
+      "log": "patch-check.log"
+    },
+    "build": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "build",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "--workspace"
+      ],
+      "exit_code": 0,
+      "log": "build.log"
+    },
+    "tests": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "test",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "--workspace"
+      ],
+      "exit_code": 0,
+      "log": "tests.log"
+    },
+    "clippy": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "clippy",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "--workspace",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "log": "clippy.log"
+    },
+    "format": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "log": "format.log"
+    },
+    "oracle": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "test",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "-p",
+        "rhwp-contracts",
+        "--test",
+        "__external_contract"
+      ],
+      "exit_code": 0,
+      "log": "oracle.log"
+    },
+    "test_sensitivity": {
+      "command": [
+        "cargo",
+        "+1.93.1",
+        "test",
+        "--offline",
+        "--locked",
+        "--target-dir",
+        "target/pr-review",
+        "-p",
+        "rhwp-contracts",
+        "--tests"
+      ],
+      "exit_code": 101,
+      "log": "test-sensitivity.log"
+    }
+  },
+  "passing_tests_before_oracle": 20,
+  "automated_pass": true,
+  "manual_review_required": true
+}

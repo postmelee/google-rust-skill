@@ -1,0 +1,59 @@
+{
+  "summary": "Updated ontology.rs to reject blank command and tool names and retain only the first occurrence of each exact valid name, using separate borrowed-name sets for commands and tools. Retained entries preserve their original metadata and order, including case, Unicode, and surrounding whitespace. Existing public signatures, schema versions, IR generation, inputs, manifests, lockfile, toolchain, source declarations, and existing tests were preserved. Added four integration tests covering duplicate metadata and ordering, invalid names, exact name identity, separate namespaces, input immutability, unchanged IR, and envelope counts. All 15 existing tests and four new integration tests pass; build, strict Clippy, and formatting checks pass.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "workspace/Cargo.toml",
+    "workspace/crates/rhwp-contracts/Cargo.toml",
+    "workspace/crates/rhwp-contracts/src/lib.rs",
+    "workspace/crates/rhwp-contracts/src/ontology.rs",
+    "workspace/rust-toolchain.toml"
+  ],
+  "commands": [
+    {
+      "command": "pwd && ls -la && cat TASK.md && cat case.json",
+      "working_directory": ".",
+      "result": "Exit 0. Read the packet instructions and task request."
+    },
+    {
+      "command": "cat ../skill/SKILL.md && cat crates/rhwp-contracts/src/ontology.rs && rg --files crates/rhwp-contracts/tests && cat Cargo.toml && cat crates/rhwp-contracts/Cargo.toml",
+      "working_directory": "workspace",
+      "result": "Exit 2. Read the skill and ontology source, but output was truncated. The integration-test directory did not yet exist, so rg failed and the subsequent manifest reads were not executed. Relevant truncated sections and the manifests were read in subsequent commands."
+    },
+    {
+      "command": "sed -n '180,320p' ../skill/SKILL.md && sed -n '1,115p' crates/rhwp-contracts/src/ontology.rs",
+      "working_directory": "workspace",
+      "result": "Exit 0. Read the remaining skill overrides and ontology imports, identifiers, and context."
+    },
+    {
+      "command": "cat Cargo.toml && cat crates/rhwp-contracts/Cargo.toml && cat crates/rhwp-contracts/src/lib.rs && rg --files -g '!Cargo.lock' -g '!target/**' -g '!crates/rhwp-contracts/src/**'",
+      "working_directory": "workspace",
+      "result": "Exit 0. Inspected workspace configuration, crate exports, and file names."
+    },
+    {
+      "command": "sed -n '150,182p' ../skill/SKILL.md && sed -n '115,215p' crates/rhwp-contracts/src/ontology.rs && cat rust-toolchain.toml",
+      "working_directory": "workspace",
+      "result": "Exit 0. Read the remaining relevant skill guidance, IR derivation code, and pinned toolchain."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "working_directory": "workspace",
+      "result": "Exit 0 before changes. Baseline formatting passed."
+    },
+    {
+      "command": "rustfmt +1.93.1 --edition 2021 crates/rhwp-contracts/tests/ontology_unique_actions.rs && cargo +1.93.1 test --workspace --offline --locked --target-dir target/pr-review --test ontology_unique_actions",
+      "working_directory": "workspace",
+      "result": "Exit 101 before the implementation change. Formatting succeeded, the new integration tests compiled, and all four failed against the original implementation, demonstrating duplicate actions and accepted blank names."
+    },
+    {
+      "command": "cargo +1.93.1 build --workspace --offline --locked --target-dir target/pr-review && cargo +1.93.1 test --workspace --offline --locked --target-dir target/pr-review && cargo +1.93.1 clippy --workspace --all-targets --offline --locked --target-dir target/pr-review -- -D warnings && cargo +1.93.1 fmt --all -- --check",
+      "working_directory": "workspace",
+      "result": "Exit 0 after the implementation change. Build passed; 15 existing unit tests and four new integration tests passed, with zero failures or ignored tests and zero documentation tests; Clippy passed with warnings denied; formatting check passed."
+    }
+  ],
+  "limitations": [
+    "Validation covers the supplied isolated rhwp-contracts crate and cached dependencies on Rust 1.93.1. Whole-engine behavior and external consumer integration were not exercised.",
+    "The initial read-only packet inspection ran from the packet root; all subsequent shell commands ran from workspace."
+  ]
+}

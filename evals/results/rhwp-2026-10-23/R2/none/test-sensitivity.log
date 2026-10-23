@@ -1,0 +1,61 @@
+
+running 15 tests
+test ir_schema::tests::objects_allow_additional_properties ... ok
+test ir_schema::tests::every_ref_resolves_to_a_definition ... ok
+test ir_schema::tests::definitions_are_reachable_from_root ... ok
+test ir_schema::tests::schema_has_document_root_and_defs ... ok
+test schema_registry::tests::policy_path_points_to_existing_document ... ok
+test schema_registry::tests::registry_value_carries_all_axes_and_crate_version ... ok
+test ir_schema::tests::envelope_reports_definition_count ... ok
+test ontology::tests::control_variants_are_subclasses_of_control ... ok
+test ontology::tests::commands_become_actions_with_trust_predicates ... ok
+test ontology::tests::property_domains_point_at_existing_classes ... ok
+test ontology::tests::envelope_counts_match_graph ... ok
+test ontology::tests::graph_covers_every_ir_definition_as_class ... ok
+test ontology::tests::tool_annotations_are_carried_when_present ... ok
+test ontology::tests::node_ids_are_unique ... ok
+test ontology::tests::tools_become_actions_linked_to_commands ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 3 tests
+test first_occurrence_keeps_all_command_and_tool_metadata ... FAILED
+test names_are_validated_without_normalizing_or_reordering_them ... FAILED
+test invalid_or_empty_catalogs_emit_no_actions ... FAILED
+
+failures:
+
+---- first_occurrence_keeps_all_command_and_tool_metadata stdout ----
+
+thread 'first_occurrence_keeps_all_command_and_tool_metadata' (203026) panicked at crates/rhwp-contracts/tests/ontology_duplicate_catalogs.rs:59:5:
+assertion `left == right` failed
+  left: [Object {"@id": String("rhwp:cmd/catalog-action"), "@type": Array [String("rhwp:Action"), String("schema:Action")], "rdfs:comment": String(" First command summary "), "rdfs:label": String("catalog-action"), "rhwp:available": Bool(false), "rhwp:batch": Bool(false), "rhwp:category": String("query"), "rhwp:flags": Array [String("--json"), Object {"name": String("--path"), "required": Bool(true)}], "rhwp:json": Bool(true), "rhwp:recordFields": Array [String("title"), Object {"name": String("pages"), "type": String("integer")}], "rhwp:requiresFeature": String("catalog"), "rhwp:subcommands": Array [Object {"flags": Array [String("--detail")], "name": String("nested")}]}, Object {"@id": String("rhwp:cmd/catalog-action"), "@type": Array [String("rhwp:Action"), String("schema:Action")], "rdfs:comment": String("Replacement"), "rdfs:label": String("catalog-action"), "rhwp:available": Bool(true)}, Object {"@id": String("rhwp:cmd/catalog-action"), "@type": Array [String("rhwp:Action"), String("schema:Action")], "rdfs:label": String("catalog-action")}, Object {"@id": String("rhwp:tool/catalog-action"), "@type": Array [String("rhwp:Action"), String("schema:Action")], "rdfs:comment": String(" First tool description "), "rdfs:label": String("catalog-action"), "rhwp:annotations": Object {"custom": Object {"source": String("first")}, "readOnlyHint": Bool(true)}, "rhwp:implementsCommand": Object {"@id": String("rhwp:cmd/catalog-action")}, "rhwp:inputProperties": Array [String("options"), String("path")], "rhwp:outputFields": Array [Object {"name": String("title"), "type": String("string")}], "rhwp:requiredInputs": Array [String("path")]}, Object {"@id": String("rhwp:tool/catalog-action"), "@type": Array [String("rhwp:Action"), String("schema:Action")], "rdfs:comment": String("Replacement"), "rdfs:label": String("catalog-action"), "rhwp:annotations": Object {"readOnlyHint": Bool(false)}, "rhwp:implementsCommand": Object {"@id": String("rhwp:cmd/other")}}]
+ right: [Object {"@id": String("rhwp:cmd/catalog-action"), "@type": Array [String("rhwp:Action"), String("schema:Action")], "rdfs:comment": String(" First command summary "), "rdfs:label": String("catalog-action"), "rhwp:available": Bool(false), "rhwp:batch": Bool(false), "rhwp:category": String("query"), "rhwp:flags": Array [String("--json"), Object {"name": String("--path"), "required": Bool(true)}], "rhwp:json": Bool(true), "rhwp:recordFields": Array [String("title"), Object {"name": String("pages"), "type": String("integer")}], "rhwp:requiresFeature": String("catalog"), "rhwp:subcommands": Array [Object {"flags": Array [String("--detail")], "name": String("nested")}]}, Object {"@id": String("rhwp:tool/catalog-action"), "@type": Array [String("rhwp:Action"), String("schema:Action")], "rdfs:comment": String(" First tool description "), "rdfs:label": String("catalog-action"), "rhwp:annotations": Object {"custom": Object {"source": String("first")}, "readOnlyHint": Bool(true)}, "rhwp:implementsCommand": Object {"@id": String("rhwp:cmd/catalog-action")}, "rhwp:inputProperties": Array [String("options"), String("path")], "rhwp:outputFields": Array [Object {"name": String("title"), "type": String("string")}], "rhwp:requiredInputs": Array [String("path")]}]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- names_are_validated_without_normalizing_or_reordering_them stdout ----
+
+thread 'names_are_validated_without_normalizing_or_reordering_them' (203028) panicked at crates/rhwp-contracts/tests/ontology_duplicate_catalogs.rs:141:5:
+assertion `left == right` failed
+  left: [("rhwp:cmd/", ""), ("rhwp:cmd/ \t\r\n", " \t\r\n"), ("rhwp:cmd/\u{a0}\u{2003}\u{3000}", "\u{a0}\u{2003}\u{3000}"), ("rhwp:cmd/zeta", "zeta"), ("rhwp:cmd/\t", "\t"), ("rhwp:cmd/ shared ", " shared "), ("rhwp:cmd/\t", "\t"), ("rhwp:cmd/shared", "shared"), ("rhwp:cmd/\t", "\t"), ("rhwp:cmd/Shared", "Shared"), ("rhwp:cmd/\t", "\t"), ("rhwp:cmd/문서", "문서"), ("rhwp:cmd/\t", "\t"), ("rhwp:cmd/é", "é"), ("rhwp:cmd/\t", "\t"), ("rhwp:cmd/e\u{301}", "e\u{301}"), ("rhwp:cmd/\t", "\t"), ("rhwp:cmd/α", "α"), ("rhwp:cmd/\t", "\t"), ("rhwp:cmd/α", "α"), ("rhwp:cmd/e\u{301}", "e\u{301}"), ("rhwp:cmd/é", "é"), ("rhwp:cmd/문서", "문서"), ("rhwp:cmd/Shared", "Shared"), ("rhwp:cmd/shared", "shared"), ("rhwp:cmd/ shared ", " shared "), ("rhwp:cmd/zeta", "zeta"), ("rhwp:tool/", ""), ("rhwp:tool/ \t\r\n", " \t\r\n"), ("rhwp:tool/\u{a0}\u{2003}\u{3000}", "\u{a0}\u{2003}\u{3000}"), ("rhwp:tool/zeta", "zeta"), ("rhwp:tool/\t", "\t"), ("rhwp:tool/ shared ", " shared "), ("rhwp:tool/\t", "\t"), ("rhwp:tool/shared", "shared"), ("rhwp:tool/\t", "\t"), ("rhwp:tool/Shared", "Shared"), ("rhwp:tool/\t", "\t"), ("rhwp:tool/문서", "문서"), ("rhwp:tool/\t", "\t"), ("rhwp:tool/é", "é"), ("rhwp:tool/\t", "\t"), ("rhwp:tool/e\u{301}", "e\u{301}"), ("rhwp:tool/\t", "\t"), ("rhwp:tool/α", "α"), ("rhwp:tool/\t", "\t"), ("rhwp:tool/α", "α"), ("rhwp:tool/e\u{301}", "e\u{301}"), ("rhwp:tool/é", "é"), ("rhwp:tool/문서", "문서"), ("rhwp:tool/Shared", "Shared"), ("rhwp:tool/shared", "shared"), ("rhwp:tool/ shared ", " shared "), ("rhwp:tool/zeta", "zeta")]
+ right: [("rhwp:cmd/zeta", "zeta"), ("rhwp:cmd/ shared ", " shared "), ("rhwp:cmd/shared", "shared"), ("rhwp:cmd/Shared", "Shared"), ("rhwp:cmd/문서", "문서"), ("rhwp:cmd/é", "é"), ("rhwp:cmd/e\u{301}", "e\u{301}"), ("rhwp:cmd/α", "α"), ("rhwp:tool/zeta", "zeta"), ("rhwp:tool/ shared ", " shared "), ("rhwp:tool/shared", "shared"), ("rhwp:tool/Shared", "Shared"), ("rhwp:tool/문서", "문서"), ("rhwp:tool/é", "é"), ("rhwp:tool/e\u{301}", "e\u{301}"), ("rhwp:tool/α", "α")]
+
+---- invalid_or_empty_catalogs_emit_no_actions stdout ----
+
+thread 'invalid_or_empty_catalogs_emit_no_actions' (203027) panicked at crates/rhwp-contracts/tests/ontology_duplicate_catalogs.rs:172:9:
+assertion failed: actions(&env["ontology"]).is_empty()
+
+
+failures:
+    first_occurrence_keeps_all_command_and_tool_metadata
+    invalid_or_empty_catalogs_emit_no_actions
+    names_are_validated_without_normalizing_or_reordering_them
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Compiling rhwp-contracts v0.1.0 (<workspace>/crates/rhwp-contracts)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.50s
+     Running unittests src/lib.rs (target/pr-review/debug/deps/rhwp_contracts-eecfbab393234104)
+     Running tests/ontology_duplicate_catalogs.rs (target/pr-review/debug/deps/ontology_duplicate_catalogs-2688f396e9a522c0)
+error: test failed, to rerun pass `-p rhwp-contracts --test ontology_duplicate_catalogs`

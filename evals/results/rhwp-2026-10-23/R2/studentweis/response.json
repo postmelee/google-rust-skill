@@ -1,0 +1,64 @@
+{
+  "summary": "Updated ontology.rs to skip missing, non-string, empty, whitespace-only, and duplicate action names. Separate local HashSet values borrow the original command and tool names, so the first valid occurrence retains its metadata, accepted names remain exact, namespaces remain independent, and graph order is unchanged. Added three integration tests covering metadata preservation without merging, invalid names, case and Unicode distinctions, surrounding whitespace, stable ordering, separate namespaces, unchanged inputs and IR nodes, envelope counts, and repeated calls. All required final checks passed: 15 existing unit tests and 3 new integration tests.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/rustguide.md",
+    "workspace/Cargo.toml",
+    "workspace/crates/rhwp-contracts/Cargo.toml",
+    "workspace/rust-toolchain.toml",
+    "workspace/crates/rhwp-contracts/src/lib.rs",
+    "workspace/crates/rhwp-contracts/src/ontology.rs",
+    "workspace/crates/rhwp-contracts/tests/ontology_duplicates.rs"
+  ],
+  "commands": [
+    {
+      "command": "rg --files crates/rhwp-contracts/tests ../skill",
+      "result": "Initial inspection returned exit code 2 because the packet did not yet contain an integration tests directory. The supplied skill files were listed successfully. The directory was subsequently created by adding the authorized integration test file.",
+      "exit_code": 2
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "phase": "Before changes",
+      "result": "Passed; the original workspace was formatted.",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo +1.93.1 test --workspace --test ontology_duplicates --offline --locked --target-dir target/pr-review",
+      "phase": "New tests against the original implementation",
+      "result": "Compiled successfully and failed all 3 new tests as expected. The original implementation emitted 86 actions instead of 16 for the mixed valid/invalid catalog and also failed first-occurrence metadata and invalid-only catalog assertions. Detailed JSON assertion output was truncated by the terminal tool; the failure summaries were observed.",
+      "exit_code": 101
+    },
+    {
+      "command": "rustup run 1.93.1 rustfmt --edition 2021 crates/rhwp-contracts/tests/ontology_duplicates.rs",
+      "result": "Formatted only the new integration test file successfully.",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo +1.93.1 build --workspace --offline --locked --target-dir target/pr-review",
+      "result": "Passed after the ontology implementation change.",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo +1.93.1 test --workspace --offline --locked --target-dir target/pr-review",
+      "result": "Passed after implementation and again after the final test readability edit: 15 existing unit tests, 3 new integration tests, and 0 doc tests; no failures or ignored tests.",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo +1.93.1 clippy --workspace --all-targets --offline --locked --target-dir target/pr-review -- -D warnings",
+      "result": "Passed after implementation and again after the final test readability edit, with warnings denied.",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "phase": "After implementation and after the final test readability edit",
+      "result": "Passed on both runs.",
+      "exit_code": 0
+    }
+  ],
+  "limitations": [
+    "Validation covers only the supplied rhwp-contracts component workspace and cached dependencies on Rust 1.93.1. No whole-engine, upstream integration, or cross-target behavior was evaluated.",
+    "The initial regression test failures are recorded above; their verbose JSON assertion details exceeded the terminal tool output budget. No final build, test, lint, or formatting failures remain."
+  ]
+}

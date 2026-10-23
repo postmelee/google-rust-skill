@@ -1,0 +1,44 @@
+{
+  "summary": "Added public provenance::mark_in_place(&mut Value, &str), returning unit, and made marked(Value, &str) delegate to the same annotation logic. The implementation borrows the existing payload, preserves field-presence rules and declaration order, refreshes annotations, leaves non-objects unchanged, and preserves unknown-command behavior. Added seven ordinary Rust integration tests. All required checks passed on Rust 1.93.1: build, 15 existing unit tests, seven new integration tests, Clippy with warnings denied, and formatting.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/rustguide.md",
+    "workspace/Cargo.toml",
+    "workspace/crates/rhwp-contracts/Cargo.toml",
+    "workspace/rust-toolchain.toml",
+    "workspace/crates/rhwp-contracts/src/lib.rs",
+    "workspace/crates/rhwp-contracts/src/provenance.rs"
+  ],
+  "commands": [
+    {
+      "command": "cat ../skill/SKILL.md && cat crates/rhwp-contracts/src/provenance.rs && cat Cargo.toml && cat crates/rhwp-contracts/Cargo.toml && rg --files crates/rhwp-contracts/tests ../skill",
+      "exit_code": 2,
+      "result": "The requested files were read. The final file-listing command reported that crates/rhwp-contracts/tests did not yet exist; the directory was subsequently created for the new integration tests. This did not prevent validation."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "exit_code": 0,
+      "result": "Passed with no output."
+    },
+    {
+      "command": "cargo +1.93.1 build --workspace --offline --locked --target-dir target/pr-review",
+      "exit_code": 0,
+      "result": "Compiling zmij v1.0.23\n   Compiling serde_core v1.0.229\n   Compiling serde_json v1.0.151\n   Compiling itoa v1.0.18\n   Compiling memchr v2.8.3\n   Compiling rhwp-contracts v0.1.0 (/private/tmp/rhwp-comparison-j92ed2l0/R1-studentweis/workspace/crates/rhwp-contracts)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.17s"
+    },
+    {
+      "command": "cargo +1.93.1 test --workspace --offline --locked --target-dir target/pr-review",
+      "exit_code": 0,
+      "result": "Compiling rhwp-contracts v0.1.0 (/private/tmp/rhwp-comparison-j92ed2l0/R1-studentweis/workspace/crates/rhwp-contracts)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.40s\n     Running unittests src/lib.rs (target/pr-review/debug/deps/rhwp_contracts-eecfbab393234104)\n\nrunning 15 tests\ntest ir_schema::tests::every_ref_resolves_to_a_definition ... ok\ntest ir_schema::tests::objects_allow_additional_properties ... ok\ntest ir_schema::tests::definitions_are_reachable_from_root ... ok\ntest ir_schema::tests::envelope_reports_definition_count ... ok\ntest schema_registry::tests::policy_path_points_to_existing_document ... ok\ntest schema_registry::tests::registry_value_carries_all_axes_and_crate_version ... ok\ntest ontology::tests::tool_annotations_are_carried_when_present ... ok\ntest ir_schema::tests::schema_has_document_root_and_defs ... ok\ntest ontology::tests::control_variants_are_subclasses_of_control ... ok\ntest ontology::tests::commands_become_actions_with_trust_predicates ... ok\ntest ontology::tests::property_domains_point_at_existing_classes ... ok\ntest ontology::tests::graph_covers_every_ir_definition_as_class ... ok\ntest ontology::tests::envelope_counts_match_graph ... ok\ntest ontology::tests::node_ids_are_unique ... ok\ntest ontology::tests::tools_become_actions_linked_to_commands ... ok\n\ntest result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n     Running tests/provenance_in_place.rs (target/pr-review/debug/deps/provenance_in_place-2c8cc2889001afec)\n\nrunning 7 tests\ntest non_objects_are_unchanged ... ok\ntest annotates_a_borrowed_child_without_copying_its_payload ... ok\ntest repeated_annotation_refreshes_fields_after_payload_changes ... ok\ntest unknown_and_trusted_commands_replace_stale_annotations ... ok\ntest annotations_follow_declaration_order ... ok\ntest array_paths_require_a_present_value_in_any_element ... ok\ntest scalar_field_presence_preserves_empty_and_nonempty_rules ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests rhwp_contracts\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    },
+    {
+      "command": "cargo +1.93.1 clippy --workspace --all-targets --offline --locked --target-dir target/pr-review -- -D warnings",
+      "exit_code": 0,
+      "result": "Checking itoa v1.0.18\n    Checking memchr v2.8.3\n    Checking zmij v1.0.23\n    Checking serde_core v1.0.229\n    Checking serde_json v1.0.151\n    Checking rhwp-contracts v0.1.0 (/private/tmp/rhwp-comparison-j92ed2l0/R1-studentweis/workspace/crates/rhwp-contracts)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.03s"
+    }
+  ],
+  "limitations": [
+    "Validation covers the supplied isolated rhwp-contracts component and its cached dependencies, not the complete rhwp engine or upstream integration. No benchmarks were run; a regression test verifies that the borrowed payload's existing string allocation is retained."
+  ]
+}

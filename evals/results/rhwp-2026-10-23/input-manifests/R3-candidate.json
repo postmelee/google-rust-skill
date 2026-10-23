@@ -1,0 +1,90 @@
+{
+  "TASK.md": {
+    "sha256": "0ebc80fd96deca43058414bb7451a6791dd18619d4d5cf8e660f176e23557faa",
+    "bytes": 1833
+  },
+  "case.json": {
+    "sha256": "c519135b8858c0180be103865211a34a78ccd458be5033cfe31f113d2c8cbaa4",
+    "bytes": 1190
+  },
+  "skill/LICENSE": {
+    "sha256": "e6bc9e9c474700b708f568bac9e5a8a9bcb2b1dad53442f5ba449fcb848b8e76",
+    "bytes": 19467
+  },
+  "skill/NOTICE.md": {
+    "sha256": "8b12d0e8a3ae54c953f5d1f5ad4afa73ce025802679c5673b38f8ecf5c16d387",
+    "bytes": 1227
+  },
+  "skill/SKILL.md": {
+    "sha256": "3ee435cdfc5289c5530cbb02251f0212a6a49a4e3594f0c0bd4c55a2a0932afc",
+    "bytes": 4774
+  },
+  "skill/agents/openai.yaml": {
+    "sha256": "d983b2d8b72b13127d62c896664e2c6e33699dcd78fbf932894310b5fca53c1f",
+    "bytes": 265
+  },
+  "skill/references/api-design.md": {
+    "sha256": "53011a2944523ddf8890978ec39c75bf2798293e5b5127ab8c3e78e42eb0d544",
+    "bytes": 7335
+  },
+  "skill/references/organization.md": {
+    "sha256": "cd0c3cf8497837e837301034c4120b9ba341e4c29efc990ba910ab2ee12bdd53",
+    "bytes": 4198
+  },
+  "skill/references/ownership-errors.md": {
+    "sha256": "7265d2f6f82b22fa7a274bf8a6d617f679d8a2d6e536ec93dbd9ea29894d16fc",
+    "bytes": 4415
+  },
+  "skill/references/platform-specific.md": {
+    "sha256": "f050217dbbe88ea49683bdf5aab160133eacc2c9e3c77adfd19e5be0bea0cbb3",
+    "bytes": 2592
+  },
+  "skill/references/safety-docs.md": {
+    "sha256": "ca79644cb2d0b4a11cbc45e0f1e2d487a5d0be16d6b25dc8d5eb7a528149328a",
+    "bytes": 3555
+  },
+  "workspace/Cargo.lock": {
+    "sha256": "617c200eb96bd802311bb6481d83f91526e0b7c3e49cb2143117a3ae8dbc2c6a",
+    "bytes": 2644
+  },
+  "workspace/Cargo.toml": {
+    "sha256": "971c408b68399b2dc473d45cc0fe8a679d7356b89e4a34d5c39a9b543cd33a7b",
+    "bytes": 63
+  },
+  "workspace/LICENSE": {
+    "sha256": "1c3a7d5643b163a3ead4965e1bea33b832caee5bfca265efe42afcd7bc696b5b",
+    "bytes": 1072
+  },
+  "workspace/crates/rhwp-contracts/Cargo.toml": {
+    "sha256": "bb1940fceb0359c2d308b3ba1f319d8503b678d1cad4a73ff52404cc9a649401",
+    "bytes": 136
+  },
+  "workspace/crates/rhwp-contracts/src/ir_schema.rs": {
+    "sha256": "2a6d916489295aafc9b3424d86b9368bccf516ca96fc1d532417df539eb39194",
+    "bytes": 36495
+  },
+  "workspace/crates/rhwp-contracts/src/lib.rs": {
+    "sha256": "6699140068e7300512f13eb3cc3ebc8dd00776d3cbd0a81c0262075a60e5f702",
+    "bytes": 450
+  },
+  "workspace/crates/rhwp-contracts/src/ontology.rs": {
+    "sha256": "1dad229dd61122f195cb3bd8ab9276cd594ea6660c83a9b6c2d7196a7e089dfc",
+    "bytes": 25213
+  },
+  "workspace/crates/rhwp-contracts/src/provenance.rs": {
+    "sha256": "00faa44039c38459294b0fab9134cc5d8f5ef4c2a6877f4165ec12c3529dd6be",
+    "bytes": 37788
+  },
+  "workspace/crates/rhwp-contracts/src/schema_registry.rs": {
+    "sha256": "4a435d147bc4169f1375d21893f6bf00cf9efa921597c03df01f5d36e66ca108",
+    "bytes": 8241
+  },
+  "workspace/mydocs/tech/agent_runtime/version_policy.md": {
+    "sha256": "af14ca6db6592a2416348300871e8f353bb161d2f5b29dbf068d3f3544b07223",
+    "bytes": 8579
+  },
+  "workspace/rust-toolchain.toml": {
+    "sha256": "a4e0fa252c4ca8f5dcc75288ac7c4ead972ce5755d7aa3a9c895eabc922bc24f",
+    "bytes": 123
+  }
+}

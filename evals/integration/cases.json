@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "id": "R1",
+      "title": "Add an in-place provenance annotation API",
+      "source_file": "crates/rhwp-contracts/src/provenance.rs",
+      "prompt": "A Rust consumer already owns a mutable serde_json::Value and needs to annotate its provenance without cloning the entire document or transferring ownership to a temporary value. Add provenance::mark_in_place(&mut Value, &str), returning (), as a public API. Keep marked(Value, &str) available with its existing signature and behavior, and make the two entry points use the same annotation logic. Objects must retain their payload and receive the existing untrustedContent/untrustedFields annotations; non-objects must stay unchanged. Preserve the field-presence rules, declaration order, and behavior for unknown commands. Add meaningful integration tests in the crate's tests directory and run compilation and tests. Keep the implementation focused on provenance.rs; do not change existing public structs or their construction, manifest, lockfile, toolchain, source tables, or existing tests. Write new comments, tests, and the final report in English.",
+      "oracle": "R1.rs"
+    },
+    {
+      "id": "R2",
+      "title": "Keep ontology action IDs unique under duplicate inputs",
+      "source_file": "crates/rhwp-contracts/src/ontology.rs",
+      "prompt": "A consumer combines command and MCP-tool catalogs before passing them to ontology::ontology and ontology::envelope. Catalogs can contain duplicate entries, and the emitted graph currently can contain duplicate action IDs. Make command names unique within commands and tool names unique within tools, keeping the first valid occurrence and its complete metadata. Ignore missing, non-string, empty, and whitespace-only names. Preserve every other accepted name exactly, including case, Unicode, and surrounding whitespace on a nonblank name. Commands and tools remain separate namespaces. Preserve the existing order of retained entries, existing public signatures, schema version, IR nodes, and inputs. envelope actionCount must match the retained actions. Add meaningful integration tests and run compilation and tests. Keep changes focused on ontology.rs; do not change manifests, the lockfile, toolchain, existing tests, or source declarations. Write new comments, tests, and the final report in English.",
+      "oracle": "R2.rs"
+    },
+    {
+      "id": "R3",
+      "title": "Stream the schema registry and preserve I/O failures",
+      "source_file": "crates/rhwp-contracts/src/schema_registry.rs",
+      "prompt": "A Rust CLI consumer needs to write a schema registry directly to an existing std::io::Write sink. Add a public schema_registry::write_registry function whose first argument accepts a mutable writer (including &mut dyn Write) and whose second argument is a borrowed crate-version string. Return Result<(), serde_json::Error>. Write exactly the compact JSON produced by registry_value_with_crate_version for that version, with no newline or explicit flush. Reuse the current registry representation so metadata does not drift; do not duplicate the registry table. Propagate serialization/I/O errors with their error kind intact rather than panicking or converting them to plain strings. Keep all existing public APIs and output behavior. Add meaningful integration tests, including a failing writer, and run compilation and tests. Keep source changes focused on schema_registry.rs; no new dependencies, manifest/lockfile/toolchain changes, or edits to existing tests. Write new comments, tests, and the final report in English.",
+      "oracle": "R3.rs"
+    }
+  ]
+}

@@ -111,6 +111,15 @@ These cases are not a held-out benchmark. A small, single-model pilot with
 batch sessions cannot establish a general accuracy improvement or token savings.
 The report distinguishes measured file size from actual model context usage.
 
+A separate [implementation evaluation](evals/integration/README.md) uses three
+tasks on the complete `rhwp-contracts` crate from a pinned public rhwp commit.
+Agents modify source and add tests; captured patches are independently rebuilt
+and checked against existing tests and external consumer tests. This component
+suite does not validate the full rhwp engine, WASM, or rendering pipeline.
+The [recorded comparison](evals/results/rhwp-2026-10-23/REPORT.md) passed all three
+tasks in each of the four conditions (12 runs): a tie, with no measured skill
+advantage. Patches, logs, frozen criteria, and a replay command are included.
+
 ## Develop and verify
 
 Use Python 3.10+ and Rust 1.94.1 for the recorded fixture checks:
@@ -160,8 +169,9 @@ normal code task or claim a pinned release is always current.
 
 No GitHub repository is created or published by the maintenance scripts.
 The included GitHub Actions workflow runs structural checks, source verification,
-fixture compilation, tooling tests, archived-result integrity checks, and packaging;
-agent evaluations are run separately.
+fixture compilation, tooling tests, archived-result integrity checks, packaging,
+and a separate replay of the 12 archived rhwp patches. Fresh model evaluations
+are run separately.
 
 ## License and acknowledgements
 
@@ -181,3 +191,8 @@ Existing skills are credited as comparison baselines, not claimed as our work:
 [0xMassi](https://github.com/0xMassi/google-rust-style-skill).
 Their pinned sources are fetched only into ignored development caches and are
 not redistributed in the runtime ZIP.
+
+The implementation evaluation uses [edwardkim/rhwp](https://github.com/edwardkim/rhwp).
+Upstream source excerpts in recorded patches retain its MIT license and attribution
+under [LICENSES/rhwp-MIT.txt](LICENSES/rhwp-MIT.txt). The evaluated source is fetched
+into an ignored cache and is not part of the installed skill or release ZIP.

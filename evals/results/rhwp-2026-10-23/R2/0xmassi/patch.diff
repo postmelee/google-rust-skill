@@ -1,0 +1,233 @@
+--- a/crates/rhwp-contracts/src/ontology.rs
++++ b/crates/rhwp-contracts/src/ontology.rs
+@@ -30,6 +30,8 @@
+ //! schema.org 대응(예: Document 를 특정 schema.org 타입에 강제 매핑)은 하지 않는다.
+ //! 계층(`rdfs:subClassOf`)도 IR 스키마의 구조(순수 `oneOf` 유니온)에서 유도되는
+ //! 만큼만 싣는다 — 억지 계층 금지.
++
++use std::collections::HashSet;
+ 
+ use serde_json::{json, Map, Value};
+ 
+@@ -280,10 +282,14 @@
+     let Some(commands) = capabilities.get("commands").and_then(Value::as_array) else {
+         return;
+     };
++    let mut seen: HashSet<&str> = HashSet::new();
+     for command in commands {
+         let Some(name) = command.get("name").and_then(Value::as_str) else {
+             continue;
+         };
++        if name.trim().is_empty() || !seen.insert(name) {
++            continue;
++        }
+         let mut node = Map::new();
+         node.insert("@id".to_string(), json!(command_id(name)));
+         // 명령은 실행 가능한 행위다 — schema.org 대응이 실제로 성립하는 지점.
+@@ -319,10 +325,14 @@
+ 
+ /// MCP 도구 정의를 행위 노드로 펴고, 내려가는 CLI 명령 노드와 연결한다.
+ fn push_tool_nodes(graph: &mut Vec<Value>, tools: &[Value]) {
++    let mut seen: HashSet<&str> = HashSet::new();
+     for tool in tools {
+         let Some(name) = tool.get("name").and_then(Value::as_str) else {
+             continue;
+         };
++        if name.trim().is_empty() || !seen.insert(name) {
++            continue;
++        }
+         let mut node = Map::new();
+         node.insert("@id".to_string(), json!(tool_id(name)));
+         node.insert("@type".to_string(), json!(["rhwp:Action", "schema:Action"]));
+--- /dev/null
++++ b/crates/rhwp-contracts/tests/ontology_unique_actions.rs
+@@ -0,0 +1,189 @@
++use rhwp_contracts::ontology;
++use serde_json::{json, Value};
++
++fn actions(body: &Value) -> Vec<&Value> {
++    body["@graph"]
++        .as_array()
++        .expect("ontology graph must be an array")
++        .iter()
++        .filter(|node| {
++            node["@type"]
++                .as_array()
++                .is_some_and(|types| types.iter().any(|kind| kind == "rhwp:Action"))
++        })
++        .collect()
++}
++
++#[test]
++fn command_duplicates_keep_first_metadata_and_order() {
++    let first = json!({
++        "name": "info",
++        "summary": "First description",
++        "category": "query",
++        "json": true,
++        "batch": false,
++        "flags": ["--json", {"name": "--verbose"}],
++        "recordFields": ["title", "fonts"],
++        "subcommands": [{"name": "nested"}],
++        "requiresFeature": "read",
++        "available": false
++    });
++    let capabilities = json!({"commands": [
++        first,
++        {"name": "bare"},
++        {"name": "info", "summary": "Replacement", "category": "other", "available": true},
++        {"name": "bare", "summary": "Should not be merged", "flags": ["--late"]}
++    ]});
++    let body = ontology::ontology(&capabilities, &[]);
++    let retained = actions(&body);
++    assert_eq!(retained.len(), 2);
++    assert_eq!(retained[0]["@id"], "rhwp:cmd/info");
++    assert_eq!(retained[0]["rdfs:label"], "info");
++    assert_eq!(retained[0]["rdfs:comment"], "First description");
++    assert_eq!(retained[0]["rhwp:category"], "query");
++    assert_eq!(retained[0]["rhwp:json"], true);
++    assert_eq!(retained[0]["rhwp:batch"], false);
++    assert_eq!(retained[0]["rhwp:flags"], first["flags"]);
++    assert_eq!(retained[0]["rhwp:recordFields"], first["recordFields"]);
++    assert_eq!(retained[0]["rhwp:subcommands"], first["subcommands"]);
++    assert_eq!(retained[0]["rhwp:requiresFeature"], "read");
++    assert_eq!(retained[0]["rhwp:available"], false);
++    let single = ontology::ontology(&json!({"commands": [first]}), &[]);
++    assert_eq!(retained[0], actions(&single)[0]);
++    assert!(retained[0].get("rhwp:untrustedFields").is_some());
++    assert!(retained[0].get("rhwp:provenanceNote").is_some());
++    assert_eq!(
++        retained[1],
++        &json!({
++            "@id": "rhwp:cmd/bare",
++            "@type": ["rhwp:Action", "schema:Action"],
++            "rdfs:label": "bare"
++        })
++    );
++}
++
++#[test]
++fn tool_duplicates_keep_first_metadata_and_order() {
++    let tools = vec![
++        json!({
++            "name": "reader",
++            "description": "First tool description",
++            "cli": {"command": "info"},
++            "inputSchema": {
++                "properties": {"path": {}, "format": {}},
++                "required": ["path"]
++            },
++            "outputFields": ["title"],
++            "annotations": {"readOnlyHint": true, "custom": {"nested": [1, false]}}
++        }),
++        json!({"name": "bare"}),
++        json!({
++            "name": "reader",
++            "description": "Replacement",
++            "cli": {"command": "dump"},
++            "inputSchema": {"properties": {"replacement": {}}, "required": []},
++            "outputFields": [],
++            "annotations": {"readOnlyHint": false}
++        }),
++        json!({"name": "bare", "description": "Should not be merged"}),
++    ];
++    let body = ontology::ontology(&json!({}), &tools);
++    assert_eq!(
++        actions(&body),
++        vec![
++            &json!({
++                "@id": "rhwp:tool/reader",
++                "@type": ["rhwp:Action", "schema:Action"],
++                "rdfs:label": "reader",
++                "rdfs:comment": "First tool description",
++                "rhwp:implementsCommand": {"@id": "rhwp:cmd/info"},
++                "rhwp:inputProperties": ["format", "path"],
++                "rhwp:requiredInputs": ["path"],
++                "rhwp:outputFields": ["title"],
++                "rhwp:annotations": {"readOnlyHint": true, "custom": {"nested": [1, false]}}
++            }),
++            &json!({
++                "@id": "rhwp:tool/bare",
++                "@type": ["rhwp:Action", "schema:Action"],
++                "rdfs:label": "bare"
++            })
++        ]
++    );
++}
++
++#[test]
++fn names_are_validated_without_normalizing_or_sharing_namespaces() {
++    let names = [
++        "alpha", "Alpha", " alpha ", "문서", "é", "e\u{301}", "\u{200d}",
++    ];
++    let mut catalog = vec![
++        Value::Null,
++        json!("not an entry"),
++        json!({}),
++        json!({"name": null}),
++        json!({"name": false}),
++        json!({"name": 42}),
++        json!({"name": []}),
++        json!({"name": {}}),
++        json!({"name": ""}),
++        json!({"name": " \t\r\n"}),
++        json!({"name": "\u{00a0}\u{3000}"}),
++    ];
++    for name in names {
++        catalog.push(json!({"name": name}));
++    }
++    for name in names {
++        catalog.push(json!({"name": name, "summary": "Duplicate"}));
++    }
++    let capabilities = json!({"version": "test-version", "commands": catalog});
++    let original_capabilities = capabilities.clone();
++    let original_tools = catalog.clone();
++    let body = ontology::ontology(&capabilities, &catalog);
++    let envelope = ontology::envelope(&capabilities, &catalog);
++    let retained = actions(&body);
++    assert_eq!(retained.len(), names.len() * 2);
++    for (index, name) in names.iter().enumerate() {
++        assert_eq!(retained[index]["@id"], format!("rhwp:cmd/{name}"));
++        assert_eq!(retained[index]["rdfs:label"], *name);
++        assert_eq!(
++            retained[index + names.len()]["@id"],
++            format!("rhwp:tool/{name}")
++        );
++        assert_eq!(retained[index + names.len()]["rdfs:label"], *name);
++    }
++    assert_eq!(envelope["ontology"], body);
++    assert_eq!(envelope["actionCount"], names.len() * 2);
++    assert_eq!(envelope["schemaVersion"], "1.0");
++    assert_eq!(capabilities, original_capabilities);
++    assert_eq!(catalog, original_tools);
++
++    let empty = ontology::envelope(&json!({"version": "test-version"}), &[]);
++    let graph = body["@graph"].as_array().expect("ontology graph");
++    let unchanged = empty["ontology"]["@graph"].as_array().expect("empty graph");
++    assert_eq!(&graph[..unchanged.len()], unchanged);
++    assert_eq!(graph.len(), unchanged.len() + names.len() * 2);
++    assert_eq!(envelope["classCount"], empty["classCount"]);
++    assert_eq!(envelope["propertyCount"], empty["propertyCount"]);
++}
++
++#[test]
++fn absent_or_invalid_catalogs_have_no_actions() {
++    let invalid_entries = vec![
++        json!({"name": ""}),
++        json!({"name": " \t"}),
++        json!({"name": 1}),
++    ];
++    let capabilities_cases = [
++        Value::Null,
++        json!({}),
++        json!({"commands": null}),
++        json!({"commands": {"name": "not an array"}}),
++        json!({"commands": []}),
++        json!({"commands": invalid_entries}),
++    ];
++    for capabilities in capabilities_cases {
++        let envelope = ontology::envelope(&capabilities, &invalid_entries);
++        assert!(actions(&envelope["ontology"]).is_empty());
++        assert_eq!(envelope["actionCount"], 0);
++    }
++}

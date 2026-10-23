@@ -1,0 +1,50 @@
+{
+  "Cargo.lock": {
+    "sha256": "617c200eb96bd802311bb6481d83f91526e0b7c3e49cb2143117a3ae8dbc2c6a",
+    "bytes": 2644
+  },
+  "Cargo.toml": {
+    "sha256": "971c408b68399b2dc473d45cc0fe8a679d7356b89e4a34d5c39a9b543cd33a7b",
+    "bytes": 63
+  },
+  "LICENSE": {
+    "sha256": "1c3a7d5643b163a3ead4965e1bea33b832caee5bfca265efe42afcd7bc696b5b",
+    "bytes": 1072
+  },
+  "crates/rhwp-contracts/Cargo.toml": {
+    "sha256": "bb1940fceb0359c2d308b3ba1f319d8503b678d1cad4a73ff52404cc9a649401",
+    "bytes": 136
+  },
+  "crates/rhwp-contracts/src/ir_schema.rs": {
+    "sha256": "2a6d916489295aafc9b3424d86b9368bccf516ca96fc1d532417df539eb39194",
+    "bytes": 36495
+  },
+  "crates/rhwp-contracts/src/lib.rs": {
+    "sha256": "6699140068e7300512f13eb3cc3ebc8dd00776d3cbd0a81c0262075a60e5f702",
+    "bytes": 450
+  },
+  "crates/rhwp-contracts/src/ontology.rs": {
+    "sha256": "1dad229dd61122f195cb3bd8ab9276cd594ea6660c83a9b6c2d7196a7e089dfc",
+    "bytes": 25213
+  },
+  "crates/rhwp-contracts/src/provenance.rs": {
+    "sha256": "445eca024f96ab71742344c0963900dc35bfd72de67d7fa3b916a027c24abdcf",
+    "bytes": 38174
+  },
+  "crates/rhwp-contracts/src/schema_registry.rs": {
+    "sha256": "4a435d147bc4169f1375d21893f6bf00cf9efa921597c03df01f5d36e66ca108",
+    "bytes": 8241
+  },
+  "crates/rhwp-contracts/tests/provenance_in_place.rs": {
+    "sha256": "3d7862cf38a29e65747c6de66f29dd79db88f58c4af9eb54a1461836422fbe25",
+    "bytes": 5412
+  },
+  "mydocs/tech/agent_runtime/version_policy.md": {
+    "sha256": "af14ca6db6592a2416348300871e8f353bb161d2f5b29dbf068d3f3544b07223",
+    "bytes": 8579
+  },
+  "rust-toolchain.toml": {
+    "sha256": "a4e0fa252c4ca8f5dcc75288ac7c4ead972ce5755d7aa3a9c895eabc922bc24f",
+    "bytes": 123
+  }
+}

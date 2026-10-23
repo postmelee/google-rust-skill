@@ -1,0 +1,69 @@
+   Compiling rhwp-contracts v0.1.0 (<workspace>/crates/rhwp-contracts)
+error[E0425]: cannot find value `mark_in_place` in module `provenance`
+  --> crates/rhwp-contracts/tests/provenance_in_place.rs:21:54
+   |
+21 |     let annotate: fn(&mut Value, &str) = provenance::mark_in_place;
+   |                                                      ^^^^^^^^^^^^^ not found in `provenance`
+
+error[E0425]: cannot find function `mark_in_place` in module `provenance`
+  --> crates/rhwp-contracts/tests/provenance_in_place.rs:63:21
+   |
+63 |         provenance::mark_in_place(&mut envelope, "info");
+   |                     ^^^^^^^^^^^^^ not found in `provenance`
+
+error[E0425]: cannot find function `mark_in_place` in module `provenance`
+  --> crates/rhwp-contracts/tests/provenance_in_place.rs:90:17
+   |
+90 |     provenance::mark_in_place(&mut envelope, "export-tables");
+   |                 ^^^^^^^^^^^^^ not found in `provenance`
+
+error[E0425]: cannot find function `mark_in_place` in module `provenance`
+   --> crates/rhwp-contracts/tests/provenance_in_place.rs:114:21
+    |
+114 |         provenance::mark_in_place(&mut envelope, "info");
+    |                     ^^^^^^^^^^^^^ not found in `provenance`
+
+error[E0425]: cannot find function `mark_in_place` in module `provenance`
+   --> crates/rhwp-contracts/tests/provenance_in_place.rs:120:17
+    |
+120 |     provenance::mark_in_place(&mut envelope, "export-tables");
+    |                 ^^^^^^^^^^^^^ not found in `provenance`
+
+error[E0425]: cannot find function `mark_in_place` in module `provenance`
+   --> crates/rhwp-contracts/tests/provenance_in_place.rs:132:17
+    |
+132 |     provenance::mark_in_place(&mut envelope, "info");
+    |                 ^^^^^^^^^^^^^ not found in `provenance`
+
+error[E0425]: cannot find function `mark_in_place` in module `provenance`
+   --> crates/rhwp-contracts/tests/provenance_in_place.rs:137:17
+    |
+137 |     provenance::mark_in_place(&mut envelope, "info");
+    |                 ^^^^^^^^^^^^^ not found in `provenance`
+
+error[E0425]: cannot find function `mark_in_place` in module `provenance`
+   --> crates/rhwp-contracts/tests/provenance_in_place.rs:141:17
+    |
+141 |     provenance::mark_in_place(&mut envelope, "info");
+    |                 ^^^^^^^^^^^^^ not found in `provenance`
+
+error[E0425]: cannot find function `mark_in_place` in module `provenance`
+   --> crates/rhwp-contracts/tests/provenance_in_place.rs:154:21
+    |
+154 |         provenance::mark_in_place(&mut envelope, command);
+    |                     ^^^^^^^^^^^^^ not found in `provenance`
+
+error[E0425]: cannot find function `mark_in_place` in module `provenance`
+   --> crates/rhwp-contracts/tests/provenance_in_place.rs:180:25
+    |
+180 |             provenance::mark_in_place(&mut envelope, command);
+    |                         ^^^^^^^^^^^^^ not found in `provenance`
+
+error[E0425]: cannot find function `mark_in_place` in module `provenance`
+   --> crates/rhwp-contracts/tests/provenance_in_place.rs:205:21
+    |
+205 |         provenance::mark_in_place(&mut borrowed, command);
+    |                     ^^^^^^^^^^^^^ not found in `provenance`
+
+For more information about this error, try `rustc --explain E0425`.
+error: could not compile `rhwp-contracts` (test "provenance_in_place") due to 11 previous errors

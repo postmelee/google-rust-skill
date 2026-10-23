@@ -1,0 +1,58 @@
+{
+  "summary": "Added separate borrowed-name HashSets to the command and tool action builders in ontology.rs. Missing, non-string, empty, and whitespace-only names are skipped. Each namespace retains the first valid occurrence, its existing metadata projection, and input order. Accepted names remain byte-for-byte unchanged, including case, Unicode, and surrounding whitespace. Existing public signatures, schema versions, IR generation, inputs, and envelope counting are preserved. Added three integration tests covering duplicate metadata and order, separate namespaces, invalid names, exact accepted names, input preservation, unique graph IDs, envelope counts, and empty or malformed catalogs. All final required checks pass: 15 existing unit tests and 3 new integration tests passed.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "skill/SKILL.md",
+    "skill/references/ownership-errors.md",
+    "skill/references/organization.md",
+    "workspace/crates/rhwp-contracts/src/ontology.rs",
+    "workspace/crates/rhwp-contracts/src/lib.rs",
+    "workspace/crates/rhwp-contracts/src/provenance.rs",
+    "workspace/Cargo.toml",
+    "workspace/crates/rhwp-contracts/Cargo.toml",
+    "workspace/rust-toolchain.toml"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "stage": "Before edits",
+      "result": "Passed, exit 0."
+    },
+    {
+      "command": "cargo +1.93.1 test --workspace --offline --locked --target-dir target/pr-review --test ontology_catalogs",
+      "stage": "New regression tests against the original implementation",
+      "result": "Failed as expected, exit 101. All three new tests failed, demonstrating duplicate action emission and acceptance of blank names. Failure output exceeded the tool output limit and was truncated; the test summary reported 0 passed and 3 failed."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "stage": "After implementation and test additions",
+      "result": "Failed, exit 1, because the new integration test file required formatting. The reported differences were limited to that new file."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all",
+      "result": "Passed, exit 0. Applied formatting to the new integration tests."
+    },
+    {
+      "command": "cargo +1.93.1 build --workspace --offline --locked --target-dir target/pr-review",
+      "result": "Passed, exit 0."
+    },
+    {
+      "command": "cargo +1.93.1 test --workspace --offline --locked --target-dir target/pr-review",
+      "result": "Passed, exit 0. All 15 existing unit tests and all 3 new integration tests passed; there were 0 documentation tests."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --workspace --all-targets --offline --locked --target-dir target/pr-review -- -D warnings",
+      "result": "Passed, exit 0."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "stage": "Final verification",
+      "result": "Passed, exit 0."
+    }
+  ],
+  "limitations": [
+    "Validation covered only the supplied isolated rhwp-contracts crate and host target. The full rhwp engine, external consumers, and other targets were not available in this packet and were not validated.",
+    "No required check remained blocked. Dependencies were available offline, and no tool execution failures occurred."
+  ]
+}

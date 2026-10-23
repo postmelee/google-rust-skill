@@ -1,0 +1,210 @@
+--- a/crates/rhwp-contracts/src/ontology.rs
++++ b/crates/rhwp-contracts/src/ontology.rs
+@@ -280,10 +280,14 @@
+     let Some(commands) = capabilities.get("commands").and_then(Value::as_array) else {
+         return;
+     };
++    let mut seen = std::collections::HashSet::new();
+     for command in commands {
+         let Some(name) = command.get("name").and_then(Value::as_str) else {
+             continue;
+         };
++        if name.trim().is_empty() || !seen.insert(name) {
++            continue;
++        }
+         let mut node = Map::new();
+         node.insert("@id".to_string(), json!(command_id(name)));
+         // 명령은 실행 가능한 행위다 — schema.org 대응이 실제로 성립하는 지점.
+@@ -319,10 +323,14 @@
+ 
+ /// MCP 도구 정의를 행위 노드로 펴고, 내려가는 CLI 명령 노드와 연결한다.
+ fn push_tool_nodes(graph: &mut Vec<Value>, tools: &[Value]) {
++    let mut seen = std::collections::HashSet::new();
+     for tool in tools {
+         let Some(name) = tool.get("name").and_then(Value::as_str) else {
+             continue;
+         };
++        if name.trim().is_empty() || !seen.insert(name) {
++            continue;
++        }
+         let mut node = Map::new();
+         node.insert("@id".to_string(), json!(tool_id(name)));
+         node.insert("@type".to_string(), json!(["rhwp:Action", "schema:Action"]));
+--- /dev/null
++++ b/crates/rhwp-contracts/tests/ontology_duplicate_catalogs.rs
+@@ -0,0 +1,175 @@
++use rhwp_contracts::ontology::{envelope, ontology};
++use serde_json::{json, Value};
++
++fn actions(body: &Value) -> Vec<&Value> {
++    body["@graph"]
++        .as_array()
++        .expect("graph array")
++        .iter()
++        .filter(|node| {
++            node["@type"]
++                .as_array()
++                .is_some_and(|types| types.iter().any(|kind| kind == "rhwp:Action"))
++        })
++        .collect()
++}
++
++#[test]
++fn first_occurrence_keeps_all_command_and_tool_metadata() {
++    let first_command = json!({
++        "name": "catalog-action",
++        "summary": " First command summary ",
++        "category": "query",
++        "json": true,
++        "batch": false,
++        "flags": ["--json", {"name": "--path", "required": true}],
++        "recordFields": ["title", {"name": "pages", "type": "integer"}],
++        "subcommands": [{"name": "nested", "flags": ["--detail"]}],
++        "requiresFeature": "catalog",
++        "available": false
++    });
++    let first_tool = json!({
++        "name": "catalog-action",
++        "description": " First tool description ",
++        "cli": {"command": "catalog-action"},
++        "inputSchema": {
++            "properties": {"path": {"type": "string"}, "options": {}},
++            "required": ["path"]
++        },
++        "outputFields": [{"name": "title", "type": "string"}],
++        "annotations": {"readOnlyHint": true, "custom": {"source": "first"}}
++    });
++    let capabilities = json!({"commands": [
++        first_command,
++        {"name": "catalog-action", "summary": "Replacement", "available": true},
++        {"name": "catalog-action"}
++    ]});
++    let tools = vec![
++        first_tool,
++        json!({
++            "name": "catalog-action",
++            "description": "Replacement",
++            "cli": {"command": "other"},
++            "annotations": {"readOnlyHint": false}
++        }),
++    ];
++    let original_capabilities = capabilities.clone();
++    let original_tools = tools.clone();
++    let body = ontology(&capabilities, &tools);
++    assert_eq!(
++        actions(&body),
++        vec![
++            &json!({
++                "@id": "rhwp:cmd/catalog-action",
++                "@type": ["rhwp:Action", "schema:Action"],
++                "rdfs:label": "catalog-action",
++                "rdfs:comment": " First command summary ",
++                "rhwp:category": "query",
++                "rhwp:json": true,
++                "rhwp:batch": false,
++                "rhwp:flags": ["--json", {"name": "--path", "required": true}],
++                "rhwp:recordFields": ["title", {"name": "pages", "type": "integer"}],
++                "rhwp:subcommands": [{"name": "nested", "flags": ["--detail"]}],
++                "rhwp:requiresFeature": "catalog",
++                "rhwp:available": false
++            }),
++            &json!({
++                "@id": "rhwp:tool/catalog-action",
++                "@type": ["rhwp:Action", "schema:Action"],
++                "rdfs:label": "catalog-action",
++                "rdfs:comment": " First tool description ",
++                "rhwp:implementsCommand": {"@id": "rhwp:cmd/catalog-action"},
++                "rhwp:inputProperties": ["options", "path"],
++                "rhwp:requiredInputs": ["path"],
++                "rhwp:outputFields": [{"name": "title", "type": "string"}],
++                "rhwp:annotations": {"readOnlyHint": true, "custom": {"source": "first"}}
++            })
++        ]
++    );
++    assert_eq!(capabilities, original_capabilities);
++    assert_eq!(tools, original_tools);
++}
++
++#[test]
++fn names_are_validated_without_normalizing_or_reordering_them() {
++    let names = [
++        "zeta", " shared ", "shared", "Shared", "문서", "é", "e\u{301}", "α",
++    ];
++    let mut catalog = vec![
++        Value::Null,
++        json!(false),
++        json!(17),
++        json!("scalar"),
++        json!([]),
++        json!({}),
++        json!({"name": null}),
++        json!({"name": false}),
++        json!({"name": 17}),
++        json!({"name": []}),
++        json!({"name": {}}),
++        json!({"name": ""}),
++        json!({"name": " \t\r\n"}),
++        json!({"name": "\u{a0}\u{2003}\u{3000}"}),
++    ];
++    for name in names {
++        catalog.push(json!({"name": name}));
++        catalog.push(json!({"name": "\t"}));
++    }
++    for name in names.iter().rev() {
++        catalog.push(json!({"name": name}));
++    }
++    let capabilities = json!({"version": "catalog-test", "commands": catalog});
++    let body = ontology(&capabilities, &catalog);
++    let retained = actions(&body);
++    let expected: Vec<_> = ["cmd", "tool"]
++        .into_iter()
++        .flat_map(|namespace| {
++            names
++                .iter()
++                .map(move |name| (format!("rhwp:{namespace}/{name}"), *name))
++        })
++        .collect();
++    let actual: Vec<_> = retained
++        .iter()
++        .map(|node| {
++            (
++                node["@id"].as_str().expect("action ID").to_owned(),
++                node["rdfs:label"].as_str().expect("action label"),
++            )
++        })
++        .collect();
++    assert_eq!(actual, expected);
++    let env = envelope(&capabilities, &catalog);
++    assert_eq!(env["actionCount"], names.len() * 2);
++    assert_eq!(env["ontology"], body);
++    assert_eq!(env["schemaVersion"], "1.0");
++
++    let empty_env = envelope(&json!({"version": "catalog-test", "commands": []}), &[]);
++    let non_actions: Vec<_> = body["@graph"]
++        .as_array()
++        .expect("graph array")
++        .iter()
++        .filter(|node| !retained.contains(node))
++        .cloned()
++        .collect();
++    assert_eq!(json!(non_actions), empty_env["ontology"]["@graph"]);
++    assert_eq!(env["classCount"], empty_env["classCount"]);
++    assert_eq!(env["propertyCount"], empty_env["propertyCount"]);
++}
++
++#[test]
++fn invalid_or_empty_catalogs_emit_no_actions() {
++    let invalid_tools = vec![json!({}), json!({"name": "\n\u{3000}"}), json!({"name": 1})];
++    for capabilities in [
++        Value::Null,
++        json!({}),
++        json!({"commands": null}),
++        json!({"commands": {"name": "not-an-array"}}),
++        json!({"commands": []}),
++        json!({"commands": invalid_tools}),
++    ] {
++        let env = envelope(&capabilities, &invalid_tools);
++        assert!(actions(&env["ontology"]).is_empty());
++        assert_eq!(env["actionCount"], 0);
++    }
++}

@@ -1,0 +1,38 @@
+
+running 15 tests
+test ir_schema::tests::schema_has_document_root_and_defs ... ok
+test ir_schema::tests::definitions_are_reachable_from_root ... ok
+test ir_schema::tests::objects_allow_additional_properties ... ok
+test schema_registry::tests::policy_path_points_to_existing_document ... ok
+test ontology::tests::commands_become_actions_with_trust_predicates ... ok
+test schema_registry::tests::registry_value_carries_all_axes_and_crate_version ... ok
+test ontology::tests::tool_annotations_are_carried_when_present ... ok
+test ir_schema::tests::envelope_reports_definition_count ... ok
+test ontology::tests::node_ids_are_unique ... ok
+test ontology::tests::property_domains_point_at_existing_classes ... ok
+test ir_schema::tests::every_ref_resolves_to_a_definition ... ok
+test ontology::tests::envelope_counts_match_graph ... ok
+test ontology::tests::control_variants_are_subclasses_of_control ... ok
+test ontology::tests::graph_covers_every_ir_definition_as_class ... ok
+test ontology::tests::tools_become_actions_linked_to_commands ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 3 tests
+test preserves_the_io_error_kind_after_partial_output ... ok
+test accepts_a_dynamic_writer_and_handles_short_writes_without_flushing ... ok
+test writes_exact_compact_registry_for_borrowed_versions ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling rhwp-contracts v0.1.0 (<workspace>/crates/rhwp-contracts)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.44s
+     Running unittests src/lib.rs (target/pr-review/debug/deps/rhwp_contracts-eecfbab393234104)
+     Running tests/write_registry.rs (target/pr-review/debug/deps/write_registry-5501822d9d9fd13e)
+   Doc-tests rhwp_contracts

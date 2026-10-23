@@ -1,0 +1,165 @@
+--- a/crates/rhwp-contracts/src/schema_registry.rs
++++ b/crates/rhwp-contracts/src/schema_registry.rs
+@@ -26,6 +26,7 @@
+ //! 전문은 mydocs/tech/agent_runtime/version_policy.md 가 canonical 이다.
+ 
+ use serde_json::{json, Value};
++use std::io::Write;
+ 
+ /// 명령별 `--json` 봉투 최상위 `schemaVersion`.
+ ///
+@@ -122,6 +123,17 @@
+     registry_value_with_crate_version(crate_version())
+ }
+ 
++/// Writes the registry as compact JSON without a trailing newline or flushing the writer.
++///
++/// Serialization and I/O errors are returned unchanged, preserving the I/O error kind.
++/// On failure, the writer may already contain part of the registry.
++pub fn write_registry<W: Write + ?Sized>(
++    writer: &mut W,
++    crate_version: &str,
++) -> Result<(), serde_json::Error> {
++    serde_json::to_writer(writer, &registry_value_with_crate_version(crate_version))
++}
++
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+--- /dev/null
++++ b/crates/rhwp-contracts/tests/schema_registry_writer.rs
+@@ -0,0 +1,134 @@
++use rhwp_contracts::schema_registry;
++use std::io;
++use std::io::Write;
++
++#[test]
++fn writes_exact_compact_json_for_borrowed_versions() {
++    let versions = ["", "1.2.3", "version \"quoted\"\\with\nnewline\tand 日本語"];
++    for version in versions {
++        let version = version.to_owned();
++        let expected = serde_json::to_vec(&schema_registry::registry_value_with_crate_version(
++            &version,
++        ))
++        .expect("the registry must serialize");
++        let mut output = Vec::new();
++
++        schema_registry::write_registry(&mut output, &version).expect("writing to a Vec succeeds");
++
++        assert_eq!(output, expected, "the version was {version:?}");
++    }
++}
++
++#[test]
++fn accepts_a_trait_object_and_keeps_the_existing_writer_usable() {
++    let prefix = b"existing content:";
++    let mut output = prefix.to_vec();
++    let writer: &mut dyn Write = &mut output;
++
++    schema_registry::write_registry(writer, "2.0.0").expect("writing to a Vec succeeds");
++    writer
++        .write_all(b"suffix")
++        .expect("the writer remains usable");
++
++    let mut expected = prefix.to_vec();
++    expected.extend(
++        serde_json::to_vec(&schema_registry::registry_value_with_crate_version("2.0.0"))
++            .expect("the registry must serialize"),
++    );
++    expected.extend(b"suffix");
++    assert_eq!(output, expected);
++}
++
++struct ShortWriter {
++    bytes: Vec<u8>,
++    flushes: usize,
++}
++
++impl Write for ShortWriter {
++    fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
++        let count = buffer.len().min(3);
++        self.bytes.extend_from_slice(&buffer[..count]);
++        Ok(count)
++    }
++
++    fn flush(&mut self) -> io::Result<()> {
++        self.flushes += 1;
++        Err(io::Error::other("flush must be left to the caller"))
++    }
++}
++
++#[test]
++fn completes_short_writes_without_flushing() {
++    let mut writer = ShortWriter {
++        bytes: Vec::new(),
++        flushes: 0,
++    };
++
++    schema_registry::write_registry(&mut writer, "3.0.0").expect("short writes must be retried");
++
++    let expected = serde_json::to_vec(&schema_registry::registry_value_with_crate_version("3.0.0"))
++        .expect("the registry must serialize");
++    assert_eq!(writer.bytes, expected);
++    assert_eq!(writer.flushes, 0);
++}
++
++struct FailingWriter {
++    bytes: Vec<u8>,
++    limit: usize,
++    kind: io::ErrorKind,
++}
++
++impl Write for FailingWriter {
++    fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
++        if self.bytes.len() == self.limit {
++            return Err(io::Error::new(self.kind, "injected writer failure"));
++        }
++        let count = buffer.len().min(self.limit - self.bytes.len());
++        self.bytes.extend_from_slice(&buffer[..count]);
++        Ok(count)
++    }
++
++    fn flush(&mut self) -> io::Result<()> {
++        panic!("write_registry must not flush, even after failure");
++    }
++}
++
++#[test]
++fn preserves_io_error_kinds_before_and_after_partial_output() {
++    let expected = serde_json::to_vec(&schema_registry::registry_value_with_crate_version("4.0.0"))
++        .expect("the registry must serialize");
++    for limit in [0, 17] {
++        for kind in [io::ErrorKind::BrokenPipe, io::ErrorKind::PermissionDenied] {
++            let mut writer = FailingWriter {
++                bytes: Vec::new(),
++                limit,
++                kind,
++            };
++
++            let error = schema_registry::write_registry(&mut writer, "4.0.0")
++                .expect_err("the injected I/O failure must be returned");
++
++            assert!(
++                error.is_io(),
++                "the failure must remain an I/O error: {error}"
++            );
++            assert_eq!(error.io_error_kind(), Some(kind));
++            assert_eq!(writer.bytes, expected[..limit]);
++        }
++    }
++}
++
++#[test]
++fn preserves_write_zero_when_the_sink_is_full() {
++    let mut storage = [0_u8; 5];
++    let mut writer = storage.as_mut_slice();
++
++    let error = schema_registry::write_registry(&mut writer, "5.0.0")
++        .expect_err("the registry cannot fit in this sink");
++
++    assert!(
++        error.is_io(),
++        "a full sink must produce an I/O error: {error}"
++    );
++    assert_eq!(error.io_error_kind(), Some(io::ErrorKind::WriteZero));
++}

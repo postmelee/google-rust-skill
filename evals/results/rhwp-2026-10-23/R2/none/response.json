@@ -1,0 +1,42 @@
+{
+  "summary": "Updated ontology.rs to retain the first nonblank string name in each command and tool catalog using independent borrowed-name sets. Retained names are not normalized, their order and metadata are preserved, and envelope actionCount reflects the retained actions. Added three integration tests covering duplicate metadata, separate namespaces, invalid names and catalogs, exact case/Unicode/whitespace preservation, ordering, input preservation, unchanged IR nodes and counts, and envelope consistency. Compilation, all 18 tests, Clippy with warnings denied, and formatting checks passed.",
+  "references_read": [
+    "TASK.md",
+    "case.json",
+    "workspace/Cargo.toml",
+    "workspace/crates/rhwp-contracts/Cargo.toml",
+    "workspace/rust-toolchain.toml",
+    "workspace/crates/rhwp-contracts/src/lib.rs",
+    "workspace/crates/rhwp-contracts/src/ontology.rs"
+  ],
+  "commands": [
+    {
+      "command": "cargo +1.93.1 test --workspace --offline --locked --target-dir target/pr-review --test ontology_duplicate_catalogs",
+      "result": "Before implementation: exit 101; all three new regression tests failed on the expected duplicate and blank-name defects. The test binary compiled successfully."
+    },
+    {
+      "command": "cargo +1.93.1 build --workspace --offline --locked --target-dir target/pr-review",
+      "result": "After implementation: exit 0; workspace compilation passed."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "result": "Initial formatting check: exit 1; one array in the new integration test needed multiline formatting. Corrected that test formatting without changing other files."
+    },
+    {
+      "command": "cargo +1.93.1 test --workspace --offline --locked --target-dir target/pr-review",
+      "result": "Exit 0; 15 existing unit tests and three new integration tests passed; zero doc tests."
+    },
+    {
+      "command": "cargo +1.93.1 fmt --all -- --check",
+      "result": "Final formatting check: exit 0."
+    },
+    {
+      "command": "cargo +1.93.1 clippy --workspace --all-targets --offline --locked --target-dir target/pr-review -- -D warnings",
+      "result": "Exit 0; no warnings."
+    }
+  ],
+  "limitations": [
+    "Validation covers only the supplied rhwp-contracts component workspace, not the complete upstream engine or live command/MCP catalogs.",
+    "No tool or dependency availability failures occurred. The pre-implementation regression failures and initial formatting failure are recorded above."
+  ]
+}

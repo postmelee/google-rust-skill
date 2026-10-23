@@ -1,0 +1,7 @@
+    Checking memchr v2.8.3
+    Checking itoa v1.0.18
+    Checking serde_core v1.0.229
+    Checking zmij v1.0.23
+    Checking serde_json v1.0.151
+    Checking rhwp-contracts v0.1.0 (<workspace>/crates/rhwp-contracts)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.16s
