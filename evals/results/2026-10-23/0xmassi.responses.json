@@ -1,0 +1,142 @@
+{
+  "responses": [
+    {
+      "id": "01",
+      "skill_applied": true,
+      "response": "No actionable findings in the supplied module. Keep the async signature and Tokio-compatible behavior; the Chromium-specific restriction on async does not apply to this ordinary Cargo application.",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/01/input.rs"
+      ]
+    },
+    {
+      "id": "02",
+      "skill_applied": true,
+      "response": "Keep Arc<Vec<u8>> and Arc::clone here: each worker receives an owned reference to the same allocation, and Arc supports the required cross-thread sharing. Replacing it with Rc would not satisfy that requirement; cloning the vector would change allocation-sharing behavior. The guide's preference for unique ownership is a design preference with justified exceptions, not an unconditional Arc ban. The join().expect(...) expresses the stated invariant and need not become recoverable error handling. The actionable style change is to run the existing rustfmt configuration over the wrapped map/collect chain; no concurrency or API redesign is warranted from this fixture.",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/02/input.rs"
+      ]
+    },
+    {
+      "id": "03",
+      "skill_applied": true,
+      "response": "No signature change is warranted. The application helper can take &[u32], and returning Vec<String> directly supports the callers that immediately index it. The guide permits both choices in application code; indexed results also justify returning a vector under its library guidance. Keep the short map/collect implementation.",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/03/input.rs"
+      ]
+    },
+    {
+      "id": "04",
+      "skill_applied": true,
+      "response": "Change the borrowed input from &String to &str. The function only reads string contents, so requiring a String allocation unnecessarily excludes existing string slices. Existing &String arguments coerce to &str; String owners can call byte_len(&owned) without giving up ownership or allocating. A generic conversion parameter is unnecessary for this read-only operation. This pure library function also merits #[must_use], and its documentation should distinguish bytes from characters:\n\n```rust\n/// Returns the UTF-8 byte length, not the number of Unicode characters.\n#[must_use]\npub fn byte_len(text: &str) -> usize {\n    text.len()\n}\n```",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/04/input.rs"
+      ]
+    },
+    {
+      "id": "05",
+      "skill_applied": true,
+      "response": "The unwrap() on line 5 turns an expected file error into a panic. Return the underlying I/O error so callers can present the cause and path to the user. Replacing unwrap with expect would still violate the required error contract.\n\n```rust\nuse std::fs;\nuse std::io;\nuse std::path::Path;\n\npub fn load_config(path: &Path) -> Result<String, io::Error> {\n    fs::read_to_string(path)\n}\n```\n\nCallers should propagate or handle the Result at their existing error-reporting boundary.",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/05/input.rs"
+      ]
+    },
+    {
+      "id": "06",
+      "skill_applied": true,
+      "response": "Panic-based invariant checking is appropriate here: the vector is created nonempty immediately before the lookup. Replace the unexplained unwrap with an expect that names why the value must exist; no Result or Option return is needed.\n\n```rust\npub fn latest() -> u8 {\n    let values = vec![1_u8, 2, 3];\n    *values.last().expect(\"values is initialized with three elements\")\n}\n```",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/06/input.rs"
+      ]
+    },
+    {
+      "id": "07",
+      "skill_applied": true,
+      "response": "Keep Options exhaustive, with both fields public and its existing manual Default implementation. Adding #[non_exhaustive] would break external Options { retries: 2, ..Default::default() } construction. This all-public options pattern is an explicit exception to the guide's general extensibility recommendation. Deriving Default is also inappropriate here: it would change retries from 3 to 0. If clippy::exhaustive_structs is enabled, use a targeted #[expect(clippy::exhaustive_structs, reason = \"external callers construct options using public fields and Default\")] rather than changing the public construction contract. The existing custom default behavior must be retained.",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/07/input.rs"
+      ]
+    },
+    {
+      "id": "08",
+      "skill_applied": true,
+      "response": "Add #[non_exhaustive] to Event before release. Its planned growth across independently updated teams means external matches must allow unknown future variants from the start. Visibility represents a permanently binary choice, so keep it exhaustive; an extra catch-all requirement would not serve the stated model. If the exhaustive-enum lint is enabled, document Visibility's exception locally:\n\n```rust\n#[expect(clippy::exhaustive_enums, reason = \"visibility is permanently binary\")]\n#[derive(Clone, Copy, Debug)]\npub enum Visibility {\n    Visible,\n    Hidden,\n}\n\n#[non_exhaustive]\n#[derive(Clone, Copy, Debug)]\npub enum Event {\n    Started,\n    Stopped,\n}\n```\n\nThe expect attribute is needed only when that lint is part of the project's checks.",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/08/input.rs"
+      ]
+    },
+    {
+      "id": "09",
+      "skill_applied": true,
+      "response": "Change line 1 to use std::collections::HashMap; the module-wide collections wildcard is not an allowed case and the fixture only uses HashMap. Keep use Switch::* inside enabled: importing enum variants locally in the function that matches them is allowed. Keep use super::* inside the test module: test-local imports of the parent module are also an allowed exception. Do not mechanically replace these two contextual exceptions.",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/09/input.rs"
+      ]
+    },
+    {
+      "id": "10",
+      "skill_applied": true,
+      "response": "Retain the pinned 1.94.1 toolchain and max_width = 90. From the project root, use cargo +1.94.1 fmt --all -- --check as the formatting check; cargo fmt --all -- --check also uses the pin when run there. The supplied function should be formatted with its body on separate lines.\n\nThe skill's suggested imports_granularity = \"Module\", hex_literal_case = \"Lower\", and format_macro_matchers = true require nightly rustfmt according to the supplied reference. Do not switch this stable-only project to nightly, add a feature gate, or assume ignored settings are enforced. Leave unsupported options out and review their corresponding conventions manually where needed; stable-only projects may skip those formatter settings. Do not replace the project's max_width with the guide's default. These are suggested checks only; I have not run rustfmt or changed configuration.",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/10/input.rs",
+        "fixtures/10/rust-toolchain.toml",
+        "fixtures/10/rustfmt.toml"
+      ]
+    },
+    {
+      "id": "11",
+      "skill_applied": true,
+      "response": "The pointer dereference on line 2 causes undefined behavior for an empty slice: its pointer does not refer to an initialized first element. Because empty slices are valid inputs, neither an unchecked precondition nor a panic is the right API contract. Replace the unsafe implementation with a safe optional result:\n\n```rust\npub fn first(bytes: &[u8]) -> Option<u8> {\n    bytes.first().copied()\n}\n```\n\nNone unambiguously means the slice was empty. This preserves the first byte for nonempty input and eliminates the unsafe block altogether. A SAFETY comment or moving the block into another crate would not remedy the invalid empty-input behavior; the guide also calls for safe code when a safe implementation exists.",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/11/input.rs"
+      ]
+    },
+    {
+      "id": "12",
+      "skill_applied": true,
+      "response": "Do not introduce a Render trait merely for grouping. The stated use has no trait-bound, impl Trait, dyn Trait, or extension-trait purpose, so the guide favors inherent methods. Keep render in impl Report; if grouping later improves readability, a separate inherent impl Report block can group related methods without adding a new abstraction or changing callers.",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/12/input.rs"
+      ]
+    },
+    {
+      "id": "13",
+      "skill_applied": true,
+      "response": "Two Chromium-specific concurrency issues are visible: async fn read_label uses async, and start_worker uses std::thread::spawn plus a std::thread::JoinHandle return contract. The supplied skill explicitly names Chromium's no-async and no-std::thread rules, although their complete codebase-specific guidance is outside that skill's scope. Those restrictions apply to this first-party Chromium context, unlike an ordinary Tokio application.\n\nread_label only constructs a string and can be synchronous. Rework start_worker and its callers to use Chromium's existing approved task system, including the completion/return contract, rather than spawning a standalone standard-library thread. The fixture supplies no task-system API, so I cannot provide a concrete replacement call without inventing one. This review is limited to the restrictions identified in the supplied skill; no Chromium source or external policy was consulted.",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/13/input.rs"
+      ]
+    },
+    {
+      "id": "14",
+      "skill_applied": true,
+      "response": "Google's general free-function import recommendation prefers module-qualified calls such as helpers::label(). This conflicts with PROJECT_POLICY.md, which explicitly requires direct imports of top-level helper functions and preserves current call sites. Retain use crate::helpers::label; and label() in render, and record this as the project's intentional departure from that recommendation. The skill's general instruction to prefer Google over other advice cannot override the explicit constraints of this review.\n\nKeep the module layout and lint/formatter configuration as requested. Google's non-leaf-module advice permits a little glue code, so the small render wrapper alone does not establish a necessary restructuring. No code or configuration change is proposed for the import-policy conflict.",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/14/input.rs",
+        "fixtures/14/PROJECT_POLICY.md"
+      ]
+    },
+    {
+      "id": "15",
+      "skill_applied": false,
+      "response": "Use dict.get, which returns None for a missing key:\n\n```python\nLANGUAGES = {\"rust\": \".rs\", \"python\": \".py\"}\n\ndef extension(language):\n    return LANGUAGES.get(language)\n```\n\nExisting keys retain their mapped extensions. The Rust style skill does not apply to this Python change.",
+      "references_read": [
+        "skill/SKILL.md",
+        "fixtures/15/input.py"
+      ]
+    }
+  ]
+}

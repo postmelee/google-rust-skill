@@ -1,0 +1,3 @@
+pub async fn normalize(input: &str) -> String {
+    input.trim().to_owned()
+}

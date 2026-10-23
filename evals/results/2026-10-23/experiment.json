@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-23",
+  "timezone": "Asia/Seoul",
+  "design": "One fresh batch review session per condition; no independent sessions per case. A candidate preflight was also retained.",
+  "model": "Inherited Codex collaboration model; exact backend model identifier and sampling configuration were not exposed.",
+  "grader": "Independent grading agent using condition aliases, followed by primary-agent inspection; no human adjudication.",
+  "tools": "Local packet reads and response writes only; no browsing, no compilation by evaluated agents.",
+  "usage_metrics": "No token, latency, or cost instrumentation; byte sizes are file metadata only.",
+  "development_set": true,
+  "held_out": false,
+  "criteria_authored_before_candidate": true,
+  "inputs_sha256": {
+    "evals/cases.json": "b3b212016de8fb17be4980a9bbb626133adce05adb24ed231de0a560be3276bb",
+    "evals/rubric.json": "5bc2049fccd83dbf879802f6e580e7300abaf8d076c92be368d3bab5f0feac95"
+  },
+  "conditions": [
+    {
+      "name": "candidate",
+      "grader_alias": "C"
+    },
+    {
+      "name": "studentweis",
+      "grader_alias": "D"
+    },
+    {
+      "name": "0xmassi",
+      "grader_alias": "A"
+    },
+    {
+      "name": "none",
+      "grader_alias": "B"
+    }
+  ],
+  "preflight_note": "The candidate preflight predates a source-anchor correction (flat-file-layout to structure) and addition of public Rust fallback links. The final candidate was evaluated in a fresh session. Preflight raw responses and manifest are retained; no failed run was discarded."
+}

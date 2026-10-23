@@ -1,0 +1,199 @@
+{
+  "rules": {
+    "API-01": {
+      "file": "references/api-design.md",
+      "anchors": [
+        "flexible-references"
+      ]
+    },
+    "API-02": {
+      "file": "references/api-design.md",
+      "anchors": [
+        "accept-iterators",
+        "accepting-into",
+        "return-iterators"
+      ]
+    },
+    "API-03": {
+      "file": "references/api-design.md",
+      "anchors": [
+        "enum-vs-bool",
+        "newtypes-vs-type-aliases",
+        "prefer-named-fields"
+      ]
+    },
+    "API-04": {
+      "file": "references/api-design.md",
+      "anchors": [
+        "derive",
+        "extension-traits",
+        "generics-vs-dyn-trait",
+        "known-traits",
+        "trait-vs-inherent-impl",
+        "traits-yagni"
+      ]
+    },
+    "API-05": {
+      "file": "references/api-design.md",
+      "anchors": [
+        "from-impls",
+        "important-traits",
+        "options-should-implement-default"
+      ]
+    },
+    "API-06": {
+      "file": "references/api-design.md",
+      "anchors": [
+        "non-exhaustive-enums",
+        "non-exhaustive-structs"
+      ]
+    },
+    "API-07": {
+      "file": "references/api-design.md",
+      "anchors": [
+        "closure-accessors",
+        "const-functions",
+        "doc-hidden",
+        "expected-api-sets",
+        "getters-and-setters",
+        "operator-overloads"
+      ]
+    },
+    "API-08": {
+      "file": "references/api-design.md",
+      "anchors": [
+        "must-use-on-functions",
+        "must-use-on-types"
+      ]
+    },
+    "ORG-01": {
+      "file": "references/organization.md",
+      "anchors": [
+        "non-leaf-modules",
+        "userdefined-item"
+      ]
+    },
+    "ORG-02": {
+      "file": "references/organization.md",
+      "anchors": [
+        "glob-imports",
+        "prefer-local-trait-imports",
+        "use-statement"
+      ]
+    },
+    "ORG-03": {
+      "file": "references/organization.md",
+      "anchors": [
+        "toplevel-functions",
+        "type-names"
+      ]
+    },
+    "TOOL-01": {
+      "file": "references/organization.md",
+      "anchors": [
+        "formatting-optout",
+        "formatting-other"
+      ]
+    },
+    "ORG-04": {
+      "file": "references/organization.md",
+      "anchors": [
+        "macros"
+      ]
+    },
+    "OWN-01": {
+      "file": "references/ownership-errors.md",
+      "anchors": [
+        "avoid-rc-arc",
+        "prefer-borrows"
+      ]
+    },
+    "ERR-01": {
+      "file": "references/ownership-errors.md",
+      "anchors": [
+        "dont-check-then-unwrap",
+        "expect-over-unwrap",
+        "reporting-errors"
+      ]
+    },
+    "ERR-02": {
+      "file": "references/ownership-errors.md",
+      "anchors": [
+        "catch-unwind",
+        "poison"
+      ]
+    },
+    "IMPL-01": {
+      "file": "references/ownership-errors.md",
+      "anchors": [
+        "non-exhaustive-enum-matching",
+        "type-inference"
+      ]
+    },
+    "IMPL-02": {
+      "file": "references/ownership-errors.md",
+      "anchors": [
+        "assertion-context",
+        "combinator-chains",
+        "global-initialization",
+        "prefer-format-or-write"
+      ]
+    },
+    "PLATFORM-01": {
+      "file": "references/platform-specific.md",
+      "anchors": [
+        "async-await-chrome",
+        "formatting-other",
+        "import-macro",
+        "small-crates",
+        "std-thread",
+        "structure",
+        "test-framework",
+        "unstable-features"
+      ]
+    },
+    "PLATFORM-02": {
+      "file": "references/platform-specific.md",
+      "anchors": [
+        "fuchsia-mutex",
+        "test-framework",
+        "unstable-features"
+      ]
+    },
+    "PLATFORM-03": {
+      "file": "references/platform-specific.md",
+      "anchors": [
+        "catch-unwind"
+      ]
+    },
+    "SAFE-01": {
+      "file": "references/safety-docs.md",
+      "anchors": [
+        "unsafe"
+      ]
+    },
+    "SAFE-02": {
+      "file": "references/safety-docs.md",
+      "anchors": [
+        "unstable-features"
+      ]
+    },
+    "DOC-01": {
+      "file": "references/safety-docs.md",
+      "anchors": [
+        "writing-doc"
+      ]
+    },
+    "NAME-01": {
+      "file": "references/safety-docs.md",
+      "anchors": [
+        "avoid-abbreviations",
+        "generic-parameters",
+        "lifetimes",
+        "naming-extension-traits",
+        "naming-initialization-functions",
+        "naming-methods"
+      ]
+    }
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "version": 1,
+  "grading": "Each criterion is pass/fail with a quoted response excerpt. Fatal errors fail the case. A case passes only if all criteria pass and no fatal error occurs. Grade only the requested issue, not incidental formatting. Keep this file hidden from evaluated agents.",
+  "cases": [
+    {
+      "id": "01",
+      "criteria": [
+        "Keep async/await; identify the Chromium-only scope if discussing the prohibition.",
+        "Do not recommend a runtime migration or GN/Chromium layout."
+      ],
+      "fatal_errors": [
+        "Removes or prohibits async outside Chromium."
+      ]
+    },
+    {
+      "id": "02",
+      "criteria": [
+        "Accept justified Arc sharing and distinguish pointer cloning from deep cloning.",
+        "Do not introduce per-worker deep copies or remove required cross-thread sharing."
+      ],
+      "fatal_errors": [
+        "Treats Arc or Arc::clone as categorically prohibited."
+      ]
+    },
+    {
+      "id": "03",
+      "criteria": [
+        "Keep the slice/Vec API given known application consumers.",
+        "Avoid mandatory IntoIterator/impl Iterator/Into generalization."
+      ],
+      "fatal_errors": [
+        "Demands a generic or iterator-return API despite the stated use."
+      ]
+    },
+    {
+      "id": "04",
+      "criteria": [
+        "Recommend &str because only borrowed string contents are needed.",
+        "Keep a borrow; do not add allocation or take ownership unnecessarily."
+      ],
+      "fatal_errors": [
+        "Retains &String without justification or requires owned String."
+      ]
+    },
+    {
+      "id": "05",
+      "criteria": [
+        "Recommend Result and propagation/handling of the I/O error.",
+        "Explain that replacing unwrap with expect would still panic on recoverable input."
+      ],
+      "fatal_errors": [
+        "Offers only unwrap-to-expect as the fix."
+      ]
+    },
+    {
+      "id": "06",
+      "criteria": [
+        "Permit an invariant panic and recommend expect with a reason, or remove the unnecessary panic by a clear equivalent implementation.",
+        "Do not require Result solely because a panic exists."
+      ],
+      "fatal_errors": [
+        "Requires all panics be converted to Result."
+      ]
+    },
+    {
+      "id": "07",
+      "criteria": [
+        "Preserve public-field struct-update construction and Default.",
+        "Do not add non_exhaustive; recognize the options-struct exception."
+      ],
+      "fatal_errors": [
+        "Adds non_exhaustive or privatizes fields breaking specified callers."
+      ]
+    },
+    {
+      "id": "08",
+      "criteria": [
+        "Recommend non_exhaustive on evolving cross-team Event.",
+        "Keep the stable two-state Visibility exhaustive; explain the difference."
+      ],
+      "fatal_errors": [
+        "Applies non_exhaustive to both indiscriminately or misses Event."
+      ]
+    },
+    {
+      "id": "09",
+      "criteria": [
+        "Replace the production std::collections glob with explicit imports.",
+        "Allow use super::* in inline tests and the local enum glob."
+      ],
+      "fatal_errors": [
+        "Flags every wildcard as forbidden without exceptions."
+      ]
+    },
+    {
+      "id": "10",
+      "criteria": [
+        "Respect stable and the existing width; unsupported formatter options may be omitted.",
+        "Do not install nightly, prescribe all-features unconditionally, or claim fmt/Clippy prove all style rules."
+      ],
+      "fatal_errors": [
+        "Requires nightly or overwrites existing formatter configuration."
+      ]
+    },
+    {
+      "id": "11",
+      "criteria": [
+        "Identify undefined behavior for an empty slice.",
+        "Prefer a safe design such as first().copied() returning Option<u8>; comments alone do not fix soundness."
+      ],
+      "fatal_errors": [
+        "Only adds a SAFETY comment or asserts the existing function is sound."
+      ]
+    },
+    {
+      "id": "12",
+      "criteria": [
+        "Keep inherent methods; do not create a trait just for organization.",
+        "Do not impose additional architecture beyond the stated need."
+      ],
+      "fatal_errors": [
+        "Introduces a trait solely to organize methods."
+      ]
+    },
+    {
+      "id": "13",
+      "criteria": [
+        "Flag async/await and direct std thread spawning as Chromium-specific policy issues.",
+        "Refer to repository task/sequence infrastructure without inventing function names."
+      ],
+      "fatal_errors": [
+        "Treats this as ordinary Cargo and approves both prohibited patterns."
+      ]
+    },
+    {
+      "id": "14",
+      "criteria": [
+        "Honor explicit local direct-function-import policy and explain the Google preference as a conflict.",
+        "Do not rewrite configuration or unrelated layout."
+      ],
+      "fatal_errors": [
+        "Rewrites the direct import despite explicit project policy."
+      ]
+    },
+    {
+      "id": "15",
+      "criteria": [
+        "Use LANGUAGES.get(language), or equivalent Python lookup.",
+        "Do not activate/apply Rust guidance or convert the task to Rust."
+      ],
+      "fatal_errors": [
+        "Applies the Rust style workflow to the Python task."
+      ]
+    }
+  ]
+}

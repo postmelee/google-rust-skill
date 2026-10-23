@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "01",
+      "slug": "portable-async",
+      "prompt": "Review this application module against Google's Rust guide. The enclosing service uses Tokio; this is an ordinary Cargo project outside Google. Preserve behavior and report only actionable findings.",
+      "files": [
+        "evals/fixtures/01/input.rs"
+      ],
+      "context": "application"
+    },
+    {
+      "id": "02",
+      "slug": "shared-ownership",
+      "prompt": "Review this worker code against Google's Rust guide. Workers must share the same potentially large allocation and run on separate threads; keep this behavior.",
+      "files": [
+        "evals/fixtures/02/input.rs"
+      ],
+      "context": "application"
+    },
+    {
+      "id": "03",
+      "slug": "application-api",
+      "prompt": "Review this internal application helper using Google's Rust guide. Callers pass slices and immediately index the returned vector; do not change the public signature for hypothetical reuse.",
+      "files": [
+        "evals/fixtures/03/input.rs"
+      ],
+      "context": "application"
+    },
+    {
+      "id": "04",
+      "slug": "library-borrow",
+      "prompt": "Review this not-yet-released reusable library API using Google's Rust guide. Callers include &str and String owners. Suggest a compatible input shape and explain why.",
+      "files": [
+        "evals/fixtures/04/input.rs"
+      ],
+      "context": "library"
+    },
+    {
+      "id": "05",
+      "slug": "recoverable-error",
+      "prompt": "Review this application configuration loader against Google's Rust guide. A missing or unreadable file is an expected user-facing error. A signature change is allowed.",
+      "files": [
+        "evals/fixtures/05/input.rs"
+      ],
+      "context": "application"
+    },
+    {
+      "id": "06",
+      "slug": "invariant-panic",
+      "prompt": "Review the panic policy in this private application helper against Google's Rust guide. The vector is constructed nonempty immediately before last(); no recoverable error is involved.",
+      "files": [
+        "evals/fixtures/06/input.rs"
+      ],
+      "context": "application"
+    },
+    {
+      "id": "07",
+      "slug": "options-construction",
+      "prompt": "Review this released library options type against Google's Rust guide. External callers use Options { retries: 2, ..Default::default() }; preserve that construction pattern.",
+      "files": [
+        "evals/fixtures/07/input.rs"
+      ],
+      "context": "library"
+    },
+    {
+      "id": "08",
+      "slug": "enum-evolution",
+      "prompt": "Review these two new library enums against Google's Rust guide before release. Visibility is deliberately permanently binary. Event is used across teams and will gain variants; we cannot update all callers together.",
+      "files": [
+        "evals/fixtures/08/input.rs"
+      ],
+      "context": "library"
+    },
+    {
+      "id": "09",
+      "slug": "glob-exceptions",
+      "prompt": "Review imports against Google's Rust guide. Identify which wildcard imports require changes and which may stay. Test-local and enum-local imports should be assessed in context.",
+      "files": [
+        "evals/fixtures/09/input.rs"
+      ],
+      "context": "library"
+    },
+    {
+      "id": "10",
+      "slug": "stable-formatting",
+      "prompt": "Suggest Google Rust formatting checks for this stable-only Cargo project. Retain its pinned toolchain and existing max_width. Explain what to do with unsupported rustfmt options; do not write configuration.",
+      "files": [
+        "evals/fixtures/10/input.rs",
+        "evals/fixtures/10/rust-toolchain.toml",
+        "evals/fixtures/10/rustfmt.toml"
+      ],
+      "context": "application"
+    },
+    {
+      "id": "11",
+      "slug": "unsafe-boundary",
+      "prompt": "Review this API for correctness and Google's unsafe-code guidance. Empty slices are valid inputs. Suggest a safe design; a signature change is allowed.",
+      "files": [
+        "evals/fixtures/11/input.rs"
+      ],
+      "context": "library"
+    },
+    {
+      "id": "12",
+      "slug": "trait-purpose",
+      "prompt": "Using Google's Rust guide, should this application type gain a Render trait merely to keep rendering methods in a separate group? There is no generic dispatch, dynamic dispatch, foreign type, or second implementation.",
+      "files": [
+        "evals/fixtures/12/input.rs"
+      ],
+      "context": "application"
+    },
+    {
+      "id": "13",
+      "slug": "chromium-scope",
+      "prompt": "Review this first-party Chromium module against Google's Rust guide. It runs in Chromium's existing task system. Identify applicable concurrency policy issues; do not invent replacement APIs.",
+      "files": [
+        "evals/fixtures/13/input.rs"
+      ],
+      "context": "chromium"
+    },
+    {
+      "id": "14",
+      "slug": "local-policy",
+      "prompt": "Review this module against Google's Rust guide within the supplied project policy. Keep existing call sites and configuration. Explain any conflict instead of silently changing policy.",
+      "files": [
+        "evals/fixtures/14/input.rs",
+        "evals/fixtures/14/PROJECT_POLICY.md"
+      ],
+      "context": "application"
+    },
+    {
+      "id": "15",
+      "slug": "negative-trigger",
+      "prompt": "Fix the Python dictionary lookup so an unknown language returns None. The string 'rust' is just a key; no Rust code or style review is involved.",
+      "files": [
+        "evals/fixtures/15/input.py"
+      ],
+      "context": "non-rust"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Google Rust Guidelines"
+  short_description: "Apply Google Rust style with context and exceptions"
+  default_prompt: "Use $google-rust-guidelines to review this Rust change, preserving project policy and checking applicable exceptions."

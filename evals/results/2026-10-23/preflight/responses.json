@@ -1,0 +1,191 @@
+{
+  "responses": [
+    {
+      "id": "01",
+      "skill_applied": true,
+      "response": "No actionable finding in the supplied module. The guide's prohibition on async/await is specific to Chromium; this ordinary Cargo application may keep its async interface and Tokio runtime. Borrowing the input and returning an owned trimmed string serves this application without requiring a runtime or signature change. Sources: PLATFORM-01 and the application/library scope in SKILL.md. Static review only; no build or tests run.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/01/input.rs",
+        "skill/references/platform-specific.md",
+        "skill/references/api-design.md"
+      ]
+    },
+    {
+      "id": "02",
+      "skill_applied": true,
+      "response": "No actionable ownership or concurrency finding. At input.rs:4–7, Arc is justified by the required shared allocation and independent worker threads. Arc::clone increments the reference count; it does not copy the potentially large Vec. Replacing it with Rc would not support these threads, and cloning the underlying Vec would violate the stated sharing requirement. Keep Arc and the standard-library threads in this non-Chromium context (OWN-01; PLATFORM-01). The join expect expresses an invariant rather than an expected user-facing error (ERR-01). Static review only; no build or tests run.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/02/input.rs",
+        "skill/references/ownership-errors.md",
+        "skill/references/platform-specific.md"
+      ]
+    },
+    {
+      "id": "03",
+      "skill_applied": true,
+      "response": "No actionable API change. Keep labels(ids: &[u32]) -> Vec<String>. A slice matches the known application callers, and returning a Vec is expressly appropriate when callers need random indexing. An iterator input or return would add flexibility the application does not need and would conflict with the requested signature preservation (API-02). The short map/collect chain clearly expresses the operation (IMPL-02). Static review only; no build or tests run.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/03/input.rs",
+        "skill/references/api-design.md",
+        "skill/references/ownership-errors.md"
+      ]
+    },
+    {
+      "id": "04",
+      "skill_applied": true,
+      "response": "At input.rs:1, &String unnecessarily requires a particular owning container even though the function only reads string contents. Under API-01, use:\n\npub fn byte_len(text: &str) -> usize {\n    text.len()\n}\n\nThis accepts string slices directly and lets String owners borrow their existing storage with byte_len(&owned_string), without allocating, copying, or transferring ownership. Existing calls that pass &String remain valid through deref coercion. Taking an owned String or using Into<String> would impose unnecessary ownership/allocation concerns for this operation. Static review only; no build or tests run.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/04/input.rs",
+        "skill/references/api-design.md"
+      ]
+    },
+    {
+      "id": "05",
+      "skill_applied": true,
+      "response": "At input.rs:5, unwrap turns an expected missing/unreadable configuration file into a panic. ERR-01 requires recoverable I/O errors to be returned with their cause. Change the allowed signature and propagate the original error:\n\npub fn load_config(path: &Path) -> std::io::Result<String> {\n    fs::read_to_string(path)\n}\n\nThe caller should handle the Err and show a useful user-facing error, including the path if appropriate. Replacing unwrap with expect would still panic and would not fix the error contract. Static review only; no build or tests run.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/05/input.rs",
+        "skill/references/ownership-errors.md"
+      ]
+    },
+    {
+      "id": "06",
+      "skill_applied": true,
+      "response": "At input.rs:3, this is a valid invariant-based panic site, because the vector is constructed nonempty immediately above it. ERR-01 recommends expect over unwrap when retaining such an invariant assertion:\n\n*values.last().expect(\"values is initialized with three elements\")\n\nThere is no expected failure to recover from, so a Result return or error-propagation machinery is not warranted. Static review only; no build or tests run.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/06/input.rs",
+        "skill/references/ownership-errors.md"
+      ]
+    },
+    {
+      "id": "07",
+      "skill_applied": true,
+      "response": "No actionable construction-policy finding. Keep Options' fields public and retain its Default implementation. In particular, do not add #[non_exhaustive]: outside the defining crate that would prevent the required Options { retries: 2, ..Default::default() } construction and break released callers. These options structs are an explicit API-06 exception. The custom Default is also meaningful: deriving Default would change retries from 3 to 0 (API-05). Static review only; no build or tests run.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/07/input.rs",
+        "skill/references/api-design.md"
+      ]
+    },
+    {
+      "id": "08",
+      "skill_applied": true,
+      "response": "At input.rs:4, mark Event #[non_exhaustive] before release. Its cross-team callers cannot all migrate together, and planned variants would otherwise break exhaustive external matches. API-06 applies directly; external matches must then include a fallback arm.\n\n#[derive(Clone, Copy, Debug)]\n#[non_exhaustive]\npub enum Event { Started, Stopped }\n\nKeep Visibility exhaustive at input.rs:2. Its deliberately permanent binary state space is the fixed-ontology exception, so exhaustive matches remain useful and valid. Static review only; no build or tests run.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/08/input.rs",
+        "skill/references/api-design.md"
+      ]
+    },
+    {
+      "id": "09",
+      "skill_applied": true,
+      "response": "Change input.rs:1 from use std::collections::*; to use std::collections::HashMap;. Only HashMap is needed, and this broad wildcard has no ORG-02 exception.\n\nThe wildcard at input.rs:8 may stay: enabled primarily handles the Switch enum, so use Switch::* falls within the enum-variant exception. The wildcard at input.rs:13 may also stay: use super::* is permitted in the inline tests module. No other import change is required by the supplied context. Static review only; no build or tests run.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/09/input.rs",
+        "skill/references/organization.md"
+      ]
+    },
+    {
+      "id": "10",
+      "skill_applied": true,
+      "response": "Keep rust-toolchain.toml pinned to 1.94.1 and keep rustfmt.toml's max_width = 90. From the actual Cargo project root, use its existing formatting entrypoint or cargo +1.94.1 fmt --check. The ordinary multiline form of input.rs would be:\n\npub fn doubled(value: u32) -> u32 {\n    value * 2\n}\n\nTOOL-01 describes Google's preferred width of 100, but this review explicitly preserves the repository's width of 90. For imports_granularity, hex_literal_case, and format_macro_matchers, inspect the pinned rustfmt's option documentation and diagnostics before recommending any addition. If an option is unsupported on that stable formatter, omit it; check the corresponding convention manually where relevant, such as imports grouped by module, lowercase hexadecimal literals, and readable macro matchers. Do not switch toolchains or rely on an ignored option for enforcement.\n\nNo configuration was written. The packet contains no Cargo manifest, and I did not run rustfmt or verify those options on an installed 1.94.1 toolchain; the command above is a proposed check, not a reported pass.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/10/input.rs",
+        "fixtures/10/rust-toolchain.toml",
+        "fixtures/10/rustfmt.toml",
+        "skill/references/organization.md"
+      ]
+    },
+    {
+      "id": "11",
+      "skill_applied": true,
+      "response": "Correctness defect at input.rs:2: dereferencing bytes.as_ptr() is undefined behavior for an empty slice, which is a valid input under the requested contract. A SAFETY comment cannot establish a missing dereference precondition. SAFE-01 calls for the equivalent safe implementation; ERR-01 supports Option because absence has an obvious cause:\n\n/// Returns the first byte, or None if the slice is empty.\npub fn first(bytes: &[u8]) -> Option<u8> {\n    bytes.first().copied()\n}\n\nCallers must handle None. This removes the unsafe block and represents the empty case without a panic or fabricated byte. Relevant checks would cover empty and nonempty slices; none were executed in this read-only review.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/11/input.rs",
+        "skill/references/safety-docs.md",
+        "skill/references/ownership-errors.md"
+      ]
+    },
+    {
+      "id": "12",
+      "skill_applied": true,
+      "response": "No. Keep render as an inherent Report method. API-04 says traits need a purpose such as bounds, dispatch, or justified extension methods; method organization alone is insufficient, and none of those needs exists here. If separation later improves readability, another inherent impl Report block can group related methods without creating a trait contract. Returning an owned String justifies cloning the title; borrowing instead would change the API and is not required by the prompt (OWN-01). Static review only; no build or tests run.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/12/input.rs",
+        "skill/references/api-design.md",
+        "skill/references/ownership-errors.md"
+      ]
+    },
+    {
+      "id": "13",
+      "skill_applied": true,
+      "response": "Two concurrency-policy findings under PLATFORM-01 apply because this is first-party Chromium code:\n\n1. input.rs:2 uses async fn, which Chromium's stated policy disallows. This body has no asynchronous work and can be a synchronous String-returning function; integrate it with the existing task system as callers require.\n2. input.rs:5–6 exposes a std::thread::JoinHandle and starts a standard-library thread. Chromium prefers its sequences/task system, and this module already runs there. Move this work onto the repository's existing scheduling mechanism and align completion handling with that mechanism.\n\nThe supplied file does not identify the actual scheduler APIs or callers, so no replacement API names or drop-in migration are asserted. Inspect those interfaces before changing the function contracts. Static review only; no build or tests run.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/13/input.rs",
+        "skill/references/platform-specific.md"
+      ]
+    },
+    {
+      "id": "14",
+      "skill_applied": true,
+      "response": "No change should be made to input.rs:1 or the label() call at line 6. ORG-03 normally prefers module-qualified calls to free functions, which would suggest helpers::label(). However, PROJECT_POLICY.md:1 explicitly requires direct imports of top-level helpers and preserving current call sites. That local policy governs this review, so keep use crate::helpers::label; and label(). Preserve the current module layout and lint/formatter configuration as requested; this is an explained difference from the external convention, not an actionable local violation. Static review only; no build or tests run.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/14/input.rs",
+        "fixtures/14/PROJECT_POLICY.md",
+        "skill/references/organization.md"
+      ]
+    },
+    {
+      "id": "15",
+      "skill_applied": false,
+      "response": "Replace the lookup at input.py:4 with dict.get:\n\ndef extension(language):\n    return LANGUAGES.get(language)\n\nKnown keys still return their extensions; an unknown language returns None instead of raising KeyError. This is Python-only work, so the Rust skill does not apply. Proposed change only; the fixture was not edited and tests were not run.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/15/input.py"
+      ]
+    }
+  ]
+}

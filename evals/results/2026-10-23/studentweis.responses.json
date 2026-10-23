@@ -1,0 +1,186 @@
+{
+  "responses": [
+    {
+      "id": "01",
+      "skill_applied": true,
+      "response": "No actionable findings in the supplied module. Google's prohibition on async/await is Chromium-specific and does not apply to this Cargo/Tokio application. The borrowed &str input and owned String result fit the existing operation; retain the signature and behavior.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "skill/references/rustguide.md",
+        "fixtures/01/input.rs"
+      ]
+    },
+    {
+      "id": "02",
+      "skill_applied": true,
+      "response": "No actionable ownership or concurrency findings. Arc provides the required shared ownership across separate threads; Arc::clone on line 6 shares the same allocation and only increments its reference count. The guide's 'Avoid Rc and Arc' rule permits shared ownership when appropriate, and 'Prefer borrows over deep copies' expressly excludes reference-counted pointer cloning. Keep this ownership model. The standard-library thread restriction is Chromium-specific; this prompt establishes no Chromium scope. The join uses expect with an invariant explanation. Static review only; no compilation or tests were run.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "skill/references/rustguide.md",
+        "fixtures/02/input.rs"
+      ]
+    },
+    {
+      "id": "03",
+      "skill_applied": true,
+      "response": "No actionable findings. Preserve pub fn labels(ids: &[u32]) -> Vec<String>. 'Apply API design rules in context' favors the application's immediate needs. 'Iterators vs. slices in function parameters' explicitly allows simple slices in application code, and 'Iterators vs. owned collections in return types' expressly permits vectors when callers need random indexing. No iterator or generic API migration is justified here.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "skill/references/rustguide.md",
+        "fixtures/03/input.rs"
+      ]
+    },
+    {
+      "id": "04",
+      "skill_applied": true,
+      "response": "Applicable API finding at [input.rs:1](/private/tmp/google-rust-eval-20261023-a/fixtures/04/input.rs:1): change the borrowed input from &String to &str under 'Accept flexible references for immutable data'.\n\n```rust\npub fn byte_len(text: &str) -> usize {\n    text.len()\n}\n```\n\nThis accepts string slices and permits String owners to call byte_len(&owned_string) through deref coercion. Existing ordinary calls that pass &String continue to work. The function only reads bytes, so ownership transfer, allocation, and an impl Into<String> parameter are unnecessary. The signature changes before release; explicitly typed function pointers may need their parameter type adjusted. Static review only; this proposal was not compiled.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "skill/references/rustguide.md",
+        "fixtures/04/input.rs"
+      ]
+    },
+    {
+      "id": "05",
+      "skill_applied": true,
+      "response": "Correctness/error-contract finding at [input.rs:5](/private/tmp/google-rust-eval-20261023-a/fixtures/05/input.rs:5): unwrap turns expected missing-file, permission, and other read errors into panics. 'Reporting errors' calls for Result when recoverable I/O failures need context. Return the original I/O error so the caller can display it with the path or handle its kind.\n\n```rust\nuse std::fs;\nuse std::io;\nuse std::path::Path;\n\npub fn load_config(path: &Path) -> Result<String, io::Error> {\n    fs::read_to_string(path)\n}\n```\n\nCallers must handle or propagate the Result. Merely replacing unwrap with expect would retain the incorrect panic policy; catch_unwind is also inappropriate for this expected error. Static review only; this proposal was not compiled.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "skill/references/rustguide.md",
+        "fixtures/05/input.rs"
+      ]
+    },
+    {
+      "id": "06",
+      "skill_applied": true,
+      "response": "Applicable style finding at [input.rs:3](/private/tmp/google-rust-eval-20261023-a/fixtures/06/input.rs:3): replace unwrap with an expect message explaining the established invariant:\n\n```rust\n*values.last().expect(\"values is constructed with three elements\")\n```\n\n'Prefer expect over unwrap' applies because Vec's type does not encode nonemptiness. The immediate construction proves this particular call succeeds; the assertion guards an invariant, and there is no recoverable failure to expose. Keep the u8 return type and existing behavior. No Result or Option migration is needed.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "skill/references/rustguide.md",
+        "fixtures/06/input.rs"
+      ]
+    },
+    {
+      "id": "07",
+      "skill_applied": true,
+      "response": "No actionable API-evolution finding. Preserve the public fields, existing Default implementation, and Options { retries: 2, ..Default::default() } construction. 'Apply #[non_exhaustive] to public structs with public fields' explicitly exempts structs intended for this struct-update syntax; adding that attribute would break external construction. 'Options structs should implement Default' is already satisfied. Keep the manual Default implementation because deriving Default would change retries from 3 to 0.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "skill/references/rustguide.md",
+        "fixtures/07/input.rs"
+      ]
+    },
+    {
+      "id": "08",
+      "skill_applied": true,
+      "response": "Applicable API-evolution finding at [input.rs:4](/private/tmp/google-rust-eval-20261023-a/fixtures/08/input.rs:4): add #[non_exhaustive] to Event before release. Under 'Apply #[non_exhaustive] to publicly-exposed enums', its cross-team use, planned new variants, and inability to migrate all consumers together make this necessary. External matches must then include a fallback for future variants.\n\n```rust\n#[derive(Clone, Copy, Debug)]\n#[non_exhaustive]\npub enum Event {\n    Started,\n    Stopped,\n}\n```\n\nKeep Visibility exhaustive at line 2. Its deliberately permanent binary shape is an explicit exception to the same rule, so its callers may continue matching Visible and Hidden exhaustively.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "skill/references/rustguide.md",
+        "fixtures/08/input.rs"
+      ]
+    },
+    {
+      "id": "09",
+      "skill_applied": true,
+      "response": "Under 'Don't use glob imports':\n\n- Change [input.rs:1](/private/tmp/google-rust-eval-20261023-a/fixtures/09/input.rs:1) to use std::collections::HashMap;. This broad module wildcard has no applicable exception in the supplied code.\n- Keep use Switch::* at line 8 if desired. The guide allows enum-local wildcard imports inside functions primarily dealing with that enum, which describes enabled.\n- Keep use super::* at line 13 if desired. The guide explicitly permits this import in inline modules, including this test module.\n\nNo test-framework replacement is warranted: the supplied context establishes neither Chromium nor Fuchsia.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "skill/references/rustguide.md",
+        "fixtures/09/input.rs"
+      ]
+    },
+    {
+      "id": "10",
+      "skill_applied": true,
+      "response": "Retain Rust 1.94.1 and max_width = 90. From the Cargo project root, use cargo fmt --all -- --check; the existing rust-toolchain.toml selects the pinned toolchain. The explicit equivalent is cargo +1.94.1 fmt --all -- --check. The supplied function would normally format as:\n\n```rust\npub fn doubled(value: u32) -> u32 {\n    value * 2\n}\n```\n\nThe guide's 'Use the appropriate formatting tool' allows omitting formatter options unavailable on a project's stable Rust. Check support with the installed pinned rustfmt, for example rustfmt +1.94.1 --config-help. If guide-related options such as hex_literal_case, format_macro_matchers, or imports_granularity are unsupported or nightly-only on that version, leave them unset and check the relevant conventions in review. Do not enable unstable features, switch toolchains, or overwrite the existing width to imitate the example configuration. No configuration was written, and no formatting or option-availability command was run in this read-only packet.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "skill/references/rustguide.md",
+        "fixtures/10/input.rs",
+        "fixtures/10/rust-toolchain.toml",
+        "fixtures/10/rustfmt.toml"
+      ]
+    },
+    {
+      "id": "11",
+      "skill_applied": true,
+      "response": "Correctness finding at [input.rs:2](/private/tmp/google-rust-eval-20261023-a/fixtures/11/input.rs:2): dereferencing bytes.as_ptr() when bytes is empty reads through a pointer that is not valid for a u8 read, causing undefined behavior. A safe caller can trigger this with first(&[]). A SAFETY comment cannot make that access sound.\n\nUse an absence-aware safe API:\n\n```rust\npub fn first(bytes: &[u8]) -> Option<u8> {\n    bytes.first().copied()\n}\n```\n\nThis preserves the first-byte result for nonempty inputs and represents an empty slice with None. Callers must handle the changed return type. 'Unsafe code' requires using an equivalent safe implementation when one exists, and 'Reporting errors' supports Option for a simple missing value. There is no justification for retaining unsafe here. Static review only; this proposal was not compiled or tested.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "skill/references/rustguide.md",
+        "fixtures/11/input.rs"
+      ]
+    },
+    {
+      "id": "12",
+      "skill_applied": true,
+      "response": "No. Keep render as an inherent Report method. 'When to define a trait versus an inherent implementation' permits traits for generic programming, impl Trait/dyn Trait interfaces, or justified extension traits and explicitly rejects using traits merely to organize methods. If grouping later helps readability, put rendering methods in a separate inherent impl Report block. No new trait or caller changes are needed.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "skill/references/rustguide.md",
+        "fixtures/12/input.rs"
+      ]
+    },
+    {
+      "id": "13",
+      "skill_applied": true,
+      "response": "Two Chromium-specific concurrency findings apply:\n\n- [input.rs:2](/private/tmp/google-rust-eval-20261023-a/fixtures/13/input.rs:2) declares an async function. 'Don't use async / .await [chrome]' prohibits that in Chromium. This body performs no asynchronous work, so a synchronous function returning String is sufficient; any calling task integration must be updated consistently.\n- [input.rs:6](/private/tmp/google-rust-eval-20261023-a/fixtures/13/input.rs:6) creates a thread using std::thread::spawn. 'Don't start new threads through the Rust standard library [chrome]' directs Chromium code toward sequences. Integrate this work with the module's existing Chromium task/sequence system. Its returned thread::JoinHandle at line 5 belongs to the current thread-based design and must be reconsidered with callers.\n\nThe packet supplies no task-system API or callers, so I cannot name the correct scheduling function or return type without inventing an interface. No speculative replacement API is proposed.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "skill/references/rustguide.md",
+        "fixtures/13/input.rs"
+      ]
+    },
+    {
+      "id": "14",
+      "skill_applied": true,
+      "response": "No changes are required within the supplied project policy. At [input.rs:1](/private/tmp/google-rust-eval-20261023-a/fixtures/14/input.rs:1) and line 6, the direct import of label and unqualified label() call conflict with the guide's general 'Qualify calls to top-level functions with a module name' preference. PROJECT_POLICY.md expressly requires this import convention and preserves call sites, module layout, and configuration; retain the current code and record the departure. The guide's 'Don't implement APIs in non-leaf modules' also allows a small amount of code that ties things together, which fits this tiny wrapper, so splitting the module is not justified. No lint or formatter configuration changes are proposed.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "skill/references/rustguide.md",
+        "fixtures/14/input.rs",
+        "fixtures/14/PROJECT_POLICY.md"
+      ]
+    },
+    {
+      "id": "15",
+      "skill_applied": false,
+      "response": "Use dict.get so a missing key returns None:\n\n```python\ndef extension(language):\n    return LANGUAGES.get(language)\n```\n\nKnown keys retain their existing values. The Rust style skill does not apply to this Python lookup. This is a proposed correction; the fixture was not edited.",
+      "references_read": [
+        "TASK.md",
+        "cases.json",
+        "skill/SKILL.md",
+        "fixtures/15/input.py"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+For this review, repository policy explicitly requires direct imports of top-level helper functions. Keep existing call sites, module layout, and lint/formatter configuration. Explain conflicting external style recommendations without applying them.

@@ -1,0 +1,94 @@
+{
+  "TASK.md": {
+    "sha256": "6ece951bd8eb2171b229a62e9004ba74125d8a6e5922086b15b60fc738e4c347",
+    "bytes": 658
+  },
+  "cases.json": {
+    "sha256": "d11200772abe0c32b92a1f05862e2edc68609b20e66cfedb64e5be94184925ed",
+    "bytes": 4229
+  },
+  "fixtures/01/input.rs": {
+    "sha256": "ae9966233effb1c54b4447eb2669463058fe55c321c45589feb6dbc0a706ca2b",
+    "bytes": 78
+  },
+  "fixtures/02/input.rs": {
+    "sha256": "47a509319608f8f5f199e03c4855632c46e2bbe7b33a77387b9efffcc146dd39",
+    "bytes": 355
+  },
+  "fixtures/03/input.rs": {
+    "sha256": "9a6997633a1b5f72b37243e9ee80fbe77dc2bc73e4b6ce2f03bf79bd2b2c9fc3",
+    "bytes": 102
+  },
+  "fixtures/04/input.rs": {
+    "sha256": "c3914517b16a9c9d501bfb835bdce262667dd89ec4dbc59cfbc9fab96b1d7b43",
+    "bytes": 59
+  },
+  "fixtures/05/input.rs": {
+    "sha256": "15af3afbb97d906c69bdd9fd54713c129c6edcbb2daac3270e53290af259c5ca",
+    "bytes": 119
+  },
+  "fixtures/06/input.rs": {
+    "sha256": "ecea7f9649dd1e819a684967b5320776450669e8834acc25bb47eb65fae25d3f",
+    "bytes": 89
+  },
+  "fixtures/07/input.rs": {
+    "sha256": "43b63b9e20556aba909a758e4a25ce8c048588e9829d9e07746a990379715a78",
+    "bytes": 204
+  },
+  "fixtures/08/input.rs": {
+    "sha256": "747eabc1be64deb53493d76ac679ce9da5cf23d66fd2ecb4345a4e28ade111ee",
+    "bytes": 136
+  },
+  "fixtures/09/input.rs": {
+    "sha256": "86ab57d69f46ffd67ee1c7f94adc3a02c995e1b0691820d3041dccf176afba6b",
+    "bytes": 358
+  },
+  "fixtures/10/input.rs": {
+    "sha256": "18284d7ad8cfb0fec4441b6f51f9763c31b6c6451fdbf24d74ba8d8061cdcb0d",
+    "bytes": 48
+  },
+  "fixtures/10/rust-toolchain.toml": {
+    "sha256": "6a95738ee0eea5867a071922541a1ccaac80c63ccba5c947eb78b6130e1b22d3",
+    "bytes": 66
+  },
+  "fixtures/10/rustfmt.toml": {
+    "sha256": "c626d685705f6f3092e1f0d51f2d4f85415d9d6e5215b9b857fe38b132eb1e8e",
+    "bytes": 15
+  },
+  "fixtures/11/input.rs": {
+    "sha256": "d7d7bd3ac2d7ec36e2c640088c28c0409d074ea7d8cc401624a3625274c0814b",
+    "bytes": 68
+  },
+  "fixtures/12/input.rs": {
+    "sha256": "e244c22997ade558f6b905485fb84c5451d0040ac69e81b5f78da31708045f9a",
+    "bytes": 126
+  },
+  "fixtures/13/input.rs": {
+    "sha256": "f02b14e4c27ddf538fb305a276a51b9165d7c44a060bf4fafe4a6106b41752a0",
+    "bytes": 157
+  },
+  "fixtures/14/PROJECT_POLICY.md": {
+    "sha256": "a5d190b7cd7fac2058c6b63d9c8ef1e1f4042d729f2e9c2ee70f6016e49a7c5c",
+    "bytes": 250
+  },
+  "fixtures/14/input.rs": {
+    "sha256": "8c0b7fe0d02dc21bbce95a66a91c89bab752fbcc1e32bb3c1c5e1f93928830c2",
+    "bytes": 136
+  },
+  "fixtures/15/input.py": {
+    "sha256": "bbc9cf16c1bab97febc22affb307b9776ed12a39af154190f8a39975b30d86d2",
+    "bytes": 102
+  },
+  "skill/NOTICE.md": {
+    "sha256": "f6486f8e6d5f170174f3a3c31803f215a8907e111c659bb7fd3b61dd9e69c20b",
+    "bytes": 1263
+  },
+  "skill/SKILL.md": {
+    "sha256": "4d5154d4817cc76f8d412a37e01e781f369b7fe2080390a509f0f9f88c5c191d",
+    "bytes": 7809
+  },
+  "skill/references/rustguide.md": {
+    "sha256": "059c6cdee4e7e5a8b756135200b2ca360de146ddaf7ca6f720f839b5dd7edfe6",
+    "bytes": 60087
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Google Rust Style Guide",
+  "author": "Google",
+  "repository": "google/styleguide",
+  "commit": "2ac1584cd3c9854760f02418ec24687ec1698fb8",
+  "path": "rustguide.md",
+  "blob": "5d8e48b84afc157ca2a1433016207c5f336a0ff2",
+  "url": "https://google.github.io/styleguide/rustguide.html",
+  "retrieved_at": "2026-10-23",
+  "document_license": "CC-BY-3.0",
+  "upstream_code_examples_license": "Apache-2.0",
+  "adaptation": "Task-routed decision rules; original explanations and examples are not reproduced wholesale."
+}
