@@ -54,9 +54,12 @@ Host-specific discovery, implicit activation, and execution behavior still need
 verification in the host you use. This repository does not claim all-agent
 runtime compatibility from format validation alone.
 
-Verified locally: Skills CLI 1.7.4 on Node.js 24.15.0 discovers exactly one skill
-with `add . --list`; the release ZIP extracts into a complete skill folder.
-This discovery check does not install the skill or test every host's runtime.
+Verified for this release: Skills CLI 1.7.4 on Node.js 24.15.0 installed from the
+public GitHub repository into an isolated Codex project and listed exactly one
+installed skill. Codex's bundled installer also installed from the published
+commit into a temporary directory. All nine installed files and the ZIP contents
+matched the source bytes, including attribution and licenses. These checks verify
+installation and file integrity; they do not test every host's activation behavior.
 
 ## Use
 
